@@ -2,6 +2,8 @@
 -- encounter ICD-10 diagnoses and supplemental re-billing. Synthetic data only.
 begin;
 select plan(40);
+-- Use the default role permissions; local clinics may carry CMS overrides.
+delete from public.clinic_role_permission_overrides;
 
 -- Structure and privileges
 select ok(exists (select 1 from information_schema.columns where table_schema = 'public' and table_name = 'organization_settings' and column_name = 'balance_billing_policy'), 'organizations carry a balance-billing policy');
@@ -105,7 +107,7 @@ select throws_like(
 reset role;
 
 -- The doctor finished the visit without coding it and codes it afterwards.
-update public.encounters set status = 'finished', period_end = now()
+update public.encounters set status = 'finished', period_end = now(), encounter_setting = 'outpatient', discharge_outcome = 'improved'
 where id = 'f5000000-0000-0000-0000-000000000501';
 
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000101', true);

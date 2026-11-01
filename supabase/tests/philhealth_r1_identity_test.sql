@@ -3,6 +3,8 @@
 -- Synthetic data only.
 begin;
 select plan(26);
+-- Use the default role permissions; local clinics may carry CMS overrides.
+delete from public.clinic_role_permission_overrides;
 
 -- Setup as the database owner: a PhilHealth claim whose patient and doctor
 -- lack the details the forms print.
@@ -12,9 +14,9 @@ values ('f6000000-0000-0000-0000-000000000301', '10000000-0000-0000-0000-0000000
 insert into public.appointments (id, organization_id, patient_id, practitioner_role_id, status, start_at, end_at)
 values ('f6000000-0000-0000-0000-000000000401', '10000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000001',
   '30000000-0000-0000-0000-000000000101', 'booked', now(), now() + interval '30 minutes');
-insert into public.encounters (id, organization_id, patient_id, appointment_id, practitioner_role_id, status, period_start)
+insert into public.encounters (id, organization_id, patient_id, appointment_id, practitioner_role_id, status, period_start, encounter_setting, discharge_outcome)
 values ('f6000000-0000-0000-0000-000000000501', '10000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000001',
-  'f6000000-0000-0000-0000-000000000401', '30000000-0000-0000-0000-000000000101', 'finished', now());
+  'f6000000-0000-0000-0000-000000000401', '30000000-0000-0000-0000-000000000101', 'finished', now(), 'outpatient', 'improved');
 insert into public.conditions (organization_id, patient_id, encounter_id, code, code_display, diagnosis_rank)
 values ('10000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000001', 'f6000000-0000-0000-0000-000000000501',
   'N39.0', 'Urinary tract infection, site not specified', 1);
