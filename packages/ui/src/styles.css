@@ -3125,3 +3125,19 @@ textarea.odyssey-input {
 }
 
 
+
+/* PhilHealth accreditation card (doctor Profile page) */
+.philhealth-accreditation-card { display: grid; gap: .75rem; padding: 1.1rem 1.25rem; border: 1px solid #d9e1ea; border-radius: .6rem; background: #fff; }
+.philhealth-accreditation-card h3 { margin: 0; font-size: 1rem; }
+.philhealth-accreditation-card__status { margin: 0; font-size: .9rem; }
+.philhealth-accreditation-card__warnings { margin: 0; padding: .75rem .9rem .75rem 2rem; border-left: 4px solid #b45309; border-radius: .35rem; background: #fffbeb; color: #78350f; font-size: .85rem; line-height: 1.45; }
+.philhealth-accreditation-card__form { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: .75rem 1rem; align-items: end; }
+.philhealth-accreditation-card__actions { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
+.philhealth-accreditation-card__error { margin: 0; color: #b42318; font-size: .875rem; font-weight: 600; }
+.philhealth-accreditation-card__message { margin: 0; color: #166534; font-size: .875rem; font-weight: 600; }
+.philhealth-accreditation-confirm { width: min(92vw, 460px); padding: 1.25rem 1.4rem; border: 1px solid #d9e1ea; border-radius: .6rem; }
+.philhealth-accreditation-confirm::backdrop { background: rgb(15 23 42 / 45%); }
+.philhealth-accreditation-confirm h4 { margin: 0 0 .6rem; font-size: 1rem; }
+.philhealth-accreditation-confirm p { margin: .4rem 0; font-size: .9rem; }
+.philhealth-accreditation-confirm__pan { font: 700 1.5rem/1.2 ui-monospace, Consolas, monospace; letter-spacing: .08em; }
+.philhealth-accreditation-confirm__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .6rem; margin-top: 1rem; }

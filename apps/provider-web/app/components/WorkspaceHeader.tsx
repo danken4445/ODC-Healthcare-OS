@@ -1,6 +1,6 @@
 "use client";
 
-import {
+import { UserRound,
   CalendarDays,
   CheckCircle2,
   Clock,
@@ -152,6 +152,14 @@ export function WorkspaceHeader({
               >
                 <HandCoins size={16} />
                 <span>Payouts</span>
+              </Link>
+              <Link
+                href="/profile"
+                className="vesper-header-link"
+                title="My profile and PhilHealth accreditation"
+              >
+                <UserRound size={16} />
+                <span>Profile</span>
               </Link>
             </>
           )}

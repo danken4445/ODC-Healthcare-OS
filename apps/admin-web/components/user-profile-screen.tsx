@@ -24,6 +24,7 @@ import {
   Users,
 } from "lucide-react";
 import React, { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { PhilhealthAccreditationCard } from "@odyssey/ui";
 import { useAdminData } from "./admin-data-context";
 import { AdminSignIn } from "./admin-sign-in";
 import { PageHeader } from "./page-header";
@@ -533,6 +534,8 @@ export function UserProfileScreen() {
           </div>
         </div>
       </section>
+
+      {organization ? <PhilhealthAccreditationCard client={client} organizationId={organization.id} /> : null}
 
       {/* Navigation Tabs */}
       <nav className="profile-nav-tabs" aria-label="Profile navigation sections">
