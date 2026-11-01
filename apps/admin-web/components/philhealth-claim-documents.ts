@@ -23,6 +23,23 @@ function escapeHtml(value: unknown): string {
 
 const amountFormatter = new Intl.NumberFormat("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+interface NameParts {
+  family: string | null;
+  given: string | null;
+  middle: string | null;
+  suffix: string | null;
+}
+
+/**
+ * PhilHealth name order: LAST, FIRST SUFFIX, MIDDLE (claim form guidelines),
+ * in capitals. Falls back to the free-text name when parts are missing.
+ */
+export function formatPhilhealthName(parts: NameParts, fallback: string): string {
+  if (!parts.family || !parts.given) return fallback.toUpperCase();
+  const first = [parts.given, parts.suffix].filter(Boolean).join(" ");
+  return [parts.family, first, parts.middle].filter(Boolean).join(", ").toUpperCase();
+}
+
 /** SOA style: plain amounts, with "-" for zero. */
 export function formatSoaAmount(centavos: number | null | undefined): string {
   const value = Number(centavos ?? 0);
@@ -160,7 +177,7 @@ function patientBlock(document: PhilhealthClaimDocument): string {
     : "";
   const rows: [string, string, string, string][] = [
     ["Patient no.", patient.number, "Admission date", formatDateTime(encounter.admitted_at)],
-    ["Patient name", patient.name, "Discharge date", formatDateTime(encounter.discharged_at)],
+    ["Patient name", formatPhilhealthName(patient, patient.name), "Discharge date", formatDateTime(encounter.discharged_at)],
     ["Address", patient.address ?? "", "Age", formatAge(patient.birth_date, encounter.admitted_at)],
     ["Transaction no.", encounter.transaction_number, "No. of days", String(days)],
     ["Final diagnosis", finalDiagnosis?.description ?? "", "PHIC member PIN", member.pin ?? ""],
@@ -175,7 +192,7 @@ function patientBlock(document: PhilhealthClaimDocument): string {
 function signatureBlock(document: PhilhealthClaimDocument): string {
   return `<div class="sign">
     <div><div class="name">${escapeHtml(document.prepared_by ?? "")}</div><div class="line">Prepared by (billing)</div></div>
-    <div><div class="name">${escapeHtml(document.patient.name)}</div><div class="line">Signature over printed name of member / representative</div></div>
+    <div><div class="name">${escapeHtml(formatPhilhealthName(document.patient, document.patient.name))}</div><div class="line">Signature over printed name of member / representative</div></div>
     <div><div class="name"></div><div class="line">Relationship to member · Date signed · Contact no.</div></div>
     <div><div class="name"></div><div class="line">Authorized HCI representative · Designation · Date signed</div></div>
   </div>
@@ -268,6 +285,15 @@ function dateBoxes(value: string | null | undefined): string {
 export function buildClaimSignatureFormDocument(document: PhilhealthClaimDocument): string {
   const { patient, member, encounter, facility } = document;
   const isMember = member.relationship === "self";
+  const memberName: NameParts = isMember ? patient : member;
+  const memberBirthDate = isMember ? patient.birth_date : member.birth_date;
+  // The CSF splits names into last / first / extension / middle boxes.
+  const nameBoxes = (parts: NameParts, fallback: string) =>
+    parts.family && parts.given
+      ? [["Last name", parts.family], ["First name", parts.given], ["Name extension", parts.suffix], ["Middle name", parts.middle]]
+          .map(([label, value]) => `<span class="name-box"><span class="fill">${escapeHtml(value ?? "")}</span><span class="hint">${label}</span></span>`)
+          .join("")
+      : `<span class="fill">${escapeHtml(fallback)}</span>`;
   const finalDiagnosis = document.diagnoses.find((diagnosis) => diagnosis.rank === 1) ?? document.diagnoses[0];
   const check = (checked: boolean) => `<span class="check">${checked ? "✓" : ""}</span>`;
   const csfStyles = `
@@ -278,6 +304,7 @@ export function buildClaimSignatureFormDocument(document: PhilhealthClaimDocumen
     .part .body{padding:6px 8px;display:grid;gap:7px}
     .row{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
     .row .label{width:auto;flex:none}
+    .name-box{flex:1;min-width:110px;display:flex;flex-direction:column}.name-box .hint{margin:1px 0 0;text-align:center}
     .fill{flex:1;min-width:120px;border-bottom:1px solid #111;min-height:16px;font-weight:700;text-transform:uppercase}
     .digit{display:inline-block;width:15px;height:18px;border:1px solid #111;text-align:center;font-weight:700;line-height:17px;margin-right:1px}
     .dash{margin:0 3px}.hint{margin-left:6px;font-size:9px;color:#555}
@@ -289,10 +316,11 @@ export function buildClaimSignatureFormDocument(document: PhilhealthClaimDocumen
     <div class="csf-head"><div><h1>Philippine Health Insurance Corporation</h1><p class="facility-line" style="text-align:left">Claim Signature Form · pre-filled by ${escapeHtml(facility.name)}</p></div><div class="form">CSF</div></div>
 
     <div class="part"><h3>Part I — Member and patient information and certification</h3><div class="body">
-      <div class="row"><span class="label">1. PhilHealth Identification Number (PIN) of member:</span>${isMember ? pinBoxes(member.pin) : pinBoxes("")}</div>
-      <div class="row"><span class="label">2. Name of member:</span><span class="fill">${isMember ? escapeHtml(patient.name) : ""}</span><span class="label">3. Member date of birth:</span>${isMember ? dateBoxes(patient.birth_date) : dateBoxes(null)}</div>
+      <div class="row"><span class="label">1. PhilHealth Identification Number (PIN) of member:</span>${pinBoxes(isMember ? member.pin : member.member_pin)}</div>
+      <div class="row"><span class="label">2. Name of member:</span>${nameBoxes(memberName, isMember ? patient.name : "")}</div>
+      <div class="row"><span class="label">3. Member date of birth:</span>${dateBoxes(memberBirthDate)}</div>
       <div class="row"><span class="label">4. PIN of dependent:</span>${isMember ? pinBoxes("") : pinBoxes(member.pin)}</div>
-      <div class="row"><span class="label">5. Name of patient:</span><span class="fill">${escapeHtml(patient.name)}</span></div>
+      <div class="row"><span class="label">5. Name of patient:</span>${nameBoxes(patient, patient.name)}</div>
       <div class="row"><span class="label">6. Relationship to member:</span>${check(member.relationship === "child")}child ${check(member.relationship === "parent")}parent ${check(member.relationship === "spouse")}spouse</div>
       <div class="row"><span class="label">7. Confinement period — admitted:</span>${dateBoxes(encounter.admitted_at)}<span class="label">discharged:</span>${dateBoxes(encounter.discharged_at)}</div>
       <div class="row"><span class="label">8. Patient date of birth:</span>${dateBoxes(patient.birth_date)}</div>

@@ -21,7 +21,6 @@ import {
   saveAdminClinicService,
   saveClinicRoleDefinition,
   saveCompanyCoverage,
-  savePatientPhilhealthCoverage,
   saveDocumentTemplate,
   saveStaffDepartment,
   setClinicUserActive,
@@ -40,7 +39,6 @@ import type {
   InventoryItemSummary,
   OrganizationModuleKey,
   PaymentMethod,
-  PhilhealthMemberCategory,
 } from "@odyssey/types";
 import { Edit3, ExternalLink, FileText, Plus, Power, ReceiptText, RotateCcw, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -53,6 +51,7 @@ import {
 } from "../lib/admin-data";
 import { useAdminData } from "./admin-data-context";
 import { buildClaimSignatureFormDocument, buildStatementOfAccountDocument } from "./philhealth-claim-documents";
+import { PhilhealthDetailsAction, PractitionerPanAction } from "./philhealth-details-dialog";
 import type { DataRow } from "./data-table";
 import { Button } from "./ui/button";
 import { Dialog } from "./ui/dialog";
@@ -497,49 +496,6 @@ function AppointmentActions({ onChanged, row }: Pick<ManagementProps, "onChanged
   return <div className="record-actions">{status === "booked" ? <Button size="sm" disabled={saving} onClick={() => void change("arrived")}>Check in</Button> : null}{status === "booked" ? <Button size="sm" variant="outline" disabled={saving} onClick={() => void change("noshow")}>No-show</Button> : null}<Button size="sm" variant="danger" disabled={saving} onClick={() => void change("cancelled")}>Cancel</Button></div>;
 }
 
-function PhilhealthCoverageAction({ row }: Pick<ManagementProps, "row">) {
-  const { client, isSuperadmin, organization, permissions } = useAdminData();
-  const [open, setOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
-  if (!isSuperadmin && !permissions.includes("can_manage_billing") && !permissions.includes("can_manage_claims")) return null;
-  async function save(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!organization) return;
-    const form = new FormData(event.currentTarget);
-    setSaving(true);
-    setError(null);
-    const result = await savePatientPhilhealthCoverage(client, {
-      organizationId: organization.id,
-      patientId: value(row, "id"),
-      philhealthId: String(form.get("pin") ?? ""),
-      category: String(form.get("category")) as PhilhealthMemberCategory,
-      relationship: String(form.get("relationship")) as "self" | "spouse" | "child" | "parent",
-      eligibilityReference: String(form.get("reference") ?? "").trim() || null,
-    });
-    setSaving(false);
-    if (result.error) return setError(result.error.message);
-    setSaved(true);
-    setOpen(false);
-  }
-  return <>
-    <Button size="sm" variant="outline" onClick={() => { setSaved(false); setOpen(true); }}>{saved ? "PhilHealth saved" : "PhilHealth"}</Button>
-    <Dialog open={open} onOpenChange={setOpen} title="PhilHealth coverage" description="Record the patient's PIN and member category. Indigent, sponsored, kasambahay, senior and lifetime members qualify for No Balance Billing.">
-      <form className="dialog-body" onSubmit={save}>
-        <div className="form-grid">
-          <Field label="PhilHealth PIN (12 digits)"><Input name="pin" inputMode="numeric" placeholder="12-345678901-2" required /></Field>
-          <Field label="Member category"><Select name="category" defaultValue="employed"><option value="employed">Employed</option><option value="voluntary">Voluntary / self-earning</option><option value="indigent">Indigent</option><option value="sponsored">Sponsored</option><option value="kasambahay">Kasambahay</option><option value="senior">Senior citizen</option><option value="lifetime">Lifetime</option></Select></Field>
-          <Field label="Patient is the member's"><Select name="relationship" defaultValue="self"><option value="self">Member (self)</option><option value="spouse">Spouse</option><option value="child">Child</option><option value="parent">Parent</option></Select></Field>
-          <Field label="Eligibility reference (PBEF / tracking no.)"><Input name="reference" placeholder="Optional" /></Field>
-        </div>
-        {error ? <p className="form-error" role="alert">{error}</p> : null}
-        <div className="dialog-actions"><Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit" disabled={saving}>{saving ? "Saving…" : "Save coverage"}</Button></div>
-      </form>
-    </Dialog>
-  </>;
-}
-
 function PatientStatusAction({ onChanged, row }: Pick<ManagementProps, "onChanged" | "row">) {
   const { client, organization } = useAdminData();
   const [saving, setSaving] = useState(false);
@@ -950,6 +906,7 @@ export function RecordRowActions({ dataset, onChanged, row }: ManagementProps) {
     return (
       <div className="record-actions">
         <RecordEditorDialog dataset="staff" label="staff assignment" onChanged={onChanged} row={row} />
+        {roleCode === "doctor" || roleCode === "specialist" ? <PractitionerPanAction userId={value(row, "userId")} /> : null}
         <Button size="sm" variant="outline" onClick={async () => { if (!organization) return; await setClinicUserActive(client, organization.id, value(row, "id"), !Boolean(row?.active)); onChanged(); }}>
           <Power aria-hidden="true" size={14} />{row?.active ? "Disable" : "Enable"}
         </Button>
@@ -958,7 +915,7 @@ export function RecordRowActions({ dataset, onChanged, row }: ManagementProps) {
   }
   if (dataset === "services" || dataset === "templates" || dataset === "companies") return <div className="record-actions"><RecordEditorDialog dataset={dataset} label={dataset.slice(0, -1)} onChanged={onChanged} row={row} /></div>;
   if (dataset === "features") return <Button size="sm" variant="outline" onClick={async () => { if (!organization) return; await setOrganizationModule(client, organization.id, value(row, "key") as OrganizationModuleKey, !Boolean(row?.enabled)); onChanged(); }}><Power aria-hidden="true" size={14} />{row?.enabled ? "Disable" : "Enable"}</Button>;
-  if (dataset === "patients") return <div className="record-actions"><PhilhealthCoverageAction row={row} /><PatientStatusAction onChanged={onChanged} row={row} /></div>;
+  if (dataset === "patients") return <div className="record-actions"><PhilhealthDetailsAction patientId={value(row, "id")} /><PatientStatusAction onChanged={onChanged} row={row} /></div>;
   if (dataset === "appointments") return <AppointmentActions onChanged={onChanged} row={row} />;
   if (dataset === "billing" && Number(row?.balance ?? 0) > 0) return <PaymentDialog onChanged={onChanged} row={row} />;
   if (dataset === "claims") return <ClaimActions onChanged={onChanged} row={row} />;
