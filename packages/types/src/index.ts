@@ -596,6 +596,68 @@ export interface TriageVitalSignsInput {
   chiefComplaint?: string | null;
   notes?: string | null;
   supersedesId?: string | null;
+  /** Emergency triage level 1-5; required for PhilHealth emergency visits. */
+  triageLevel?: number | null;
+  /** PC 2025-0020 Annex A core presentation code. */
+  corePresentationCode?: string | null;
+}
+
+export type EncounterSetting = "outpatient" | "emergency" | "inpatient";
+export type AccommodationType = "ward_basic" | "private";
+export type DischargeOutcome =
+  | "improved"
+  | "recovered"
+  | "transferred"
+  | "home_against_advice"
+  | "absconded"
+  | "expired";
+
+export const ENCOUNTER_SETTING_LABELS: Record<EncounterSetting, string> = {
+  outpatient: "Outpatient (OPD)",
+  emergency: "Emergency (ER)",
+  inpatient: "Inpatient (admitted)",
+};
+
+export const ACCOMMODATION_TYPE_LABELS: Record<AccommodationType, string> = {
+  ward_basic: "Ward / basic accommodation",
+  private: "Private room",
+};
+
+/** CF2 patient disposition. */
+export const DISCHARGE_OUTCOME_LABELS: Record<DischargeOutcome, string> = {
+  improved: "Improved",
+  recovered: "Recovered",
+  transferred: "Transferred / referred",
+  home_against_advice: "Home against medical advice",
+  absconded: "Absconded",
+  expired: "Expired",
+};
+
+/** Emergency triage levels, 1 most severe. */
+export const TRIAGE_LEVEL_LABELS: Record<1 | 2 | 3 | 4 | 5, string> = {
+  1: "1 · Resuscitation",
+  2: "2 · Emergent",
+  3: "3 · Urgent",
+  4: "4 · Less urgent",
+  5: "5 · Non-urgent",
+};
+
+export interface PhilhealthCorePresentation {
+  code: string;
+  display: string;
+}
+
+export interface CheckInDetails {
+  encounterSetting?: EncounterSetting | null;
+  accommodationType?: AccommodationType | null;
+  referredFromFacility?: string | null;
+  referredFromReason?: string | null;
+}
+
+export interface DischargeDetails {
+  outcome: DischargeOutcome | null;
+  referredToFacility?: string | null;
+  referredToReason?: string | null;
 }
 
 export interface PrescriptionInput {
@@ -1748,6 +1810,15 @@ export interface PhilhealthClaimDocument {
     discharged_at: string | null;
     attending_name: string | null;
     attending_accreditation: string | null;
+    accommodation_type: AccommodationType | null;
+    triage_level: number | null;
+    core_presentation_code: string | null;
+    core_presentation: string | null;
+    discharge_outcome: DischargeOutcome | null;
+    referred_from_facility: string | null;
+    referred_from_reason: string | null;
+    referred_to_facility: string | null;
+    referred_to_reason: string | null;
   };
   diagnoses: { code: string; description: string; rank: number | null }[];
   claim: {

@@ -3460,3 +3460,10 @@ main > [role="status"] { margin: 1rem 0 0; color: var(--odyssey-muted-foreground
 .encounter-diagnosis-results button { width: 100%; padding: .5rem .65rem; border: 1px solid var(--odyssey-border); border-radius: .4rem; background: var(--odyssey-card); color: var(--odyssey-foreground); font: inherit; text-align: left; cursor: pointer; }
 .encounter-diagnosis-results button:hover, .encounter-diagnosis-results button:focus-visible { border-color: var(--odyssey-primary); outline: 2px solid var(--odyssey-focus); outline-offset: 1px; }
 .encounter-diagnosis-results button:disabled { cursor: progress; opacity: .6; }
+
+/* PhilHealth emergency triage (R1.2) */
+.triage-philhealth-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: .75rem 1rem; margin-top: .75rem; padding-top: .75rem; border-top: 1px dashed var(--odyssey-border); }
+.triage-philhealth-hint { grid-column: 1 / -1; margin: 0; color: var(--odyssey-muted-foreground); font-size: .85rem; }
+.encounter-discharge-fields { display: grid; gap: .75rem; margin: 1rem 0; text-align: left; }
+.encounter-discharge-fields label { display: grid; gap: .35rem; font-weight: 600; font-size: .9rem; }
+.encounter-discharge-hint { margin: 0; color: var(--odyssey-muted-foreground); font-size: .85rem; font-weight: 400; }

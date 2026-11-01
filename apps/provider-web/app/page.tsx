@@ -45,9 +45,14 @@ import {
   recordDiagnosticReport,
   subscribeToDiagnostics,
   updateReferralStatus,
+  listPhilhealthCorePresentations,
   type DayRange,
 } from "@odyssey/supabase-client";
-import { getHumanNameDisplay } from "@odyssey/types";
+import {
+  getHumanNameDisplay,
+  TRIAGE_LEVEL_LABELS,
+  type PhilhealthCorePresentation,
+} from "@odyssey/types";
 import type {
   AppointmentQueueItem,
   AppointmentSlotSummary,
@@ -269,6 +274,20 @@ export default function Home() {
   >("routine");
   const [triageChiefComplaint, setTriageChiefComplaint] = useState("");
   const [triageNotes, setTriageNotes] = useState("");
+  const [triageLevel, setTriageLevel] = useState("");
+  const [triageCorePresentation, setTriageCorePresentation] = useState("");
+  const [corePresentations, setCorePresentations] = useState<
+    PhilhealthCorePresentation[]
+  >([]);
+
+  useEffect(() => {
+    if (!canTriage || corePresentations.length) return;
+    void listPhilhealthCorePresentations(createBrowserSupabaseClient()).then(
+      (result) => {
+        if (result.data) setCorePresentations(result.data);
+      },
+    );
+  }, [canTriage, corePresentations.length]);
   const [triageDirty, setTriageDirty] = useState(false);
   const [triageSaveConfirmation, setTriageSaveConfirmation] = useState<{
     patientName: string;
@@ -431,6 +450,10 @@ export default function Home() {
         triageValue(currentTriage?.value, "chief_complaint"),
       );
       setTriageNotes(triageValue(currentTriage?.value, "notes"));
+      setTriageLevel(triageValue(currentTriage?.value, "triage_level"));
+      setTriageCorePresentation(
+        triageValue(currentTriage?.value, "core_presentation_code"),
+      );
     }
   }, [currentTriage, selectedTriageAppointmentId, triageDirty]);
 
@@ -526,6 +549,10 @@ export default function Home() {
       triageValue(currentTriage?.value, "chief_complaint"),
     );
     setTriageNotes(triageValue(currentTriage?.value, "notes"));
+    setTriageLevel(triageValue(currentTriage?.value, "triage_level"));
+    setTriageCorePresentation(
+      triageValue(currentTriage?.value, "core_presentation_code"),
+    );
     setTriageDirty(false);
     setTriageToast("Draft triage inputs cleared.");
   }
@@ -1111,6 +1138,8 @@ export default function Home() {
       chiefComplaint,
       notes,
       supersedesId: currentTriage?.id,
+      triageLevel: triageLevel ? Number(triageLevel) : null,
+      corePresentationCode: triageCorePresentation || null,
     });
     setClinicalBusy(false);
     if (result.error)
@@ -2527,6 +2556,55 @@ export default function Home() {
                           <option value="emergency">Emergency</option>
                         </select>
                       </Field>
+                    </div>
+                    <div className="triage-philhealth-fields">
+                      <Field label="Emergency triage level">
+                        <select
+                          id="triage-level"
+                          className="odyssey-input"
+                          name="triageLevel"
+                          value={triageLevel}
+                          onChange={(e) => {
+                            setTriageLevel(e.target.value);
+                            setTriageDirty(true);
+                          }}
+                        >
+                          <option value="">Not assessed</option>
+                          {Object.entries(TRIAGE_LEVEL_LABELS).map(
+                            ([level, label]) => (
+                              <option key={level} value={level}>
+                                {label}
+                              </option>
+                            ),
+                          )}
+                        </select>
+                      </Field>
+                      <Field label="Core presentation (PhilHealth)">
+                        <select
+                          id="triage-core-presentation"
+                          className="odyssey-input"
+                          name="corePresentation"
+                          value={triageCorePresentation}
+                          onChange={(e) => {
+                            setTriageCorePresentation(e.target.value);
+                            setTriageDirty(true);
+                          }}
+                        >
+                          <option value="">None</option>
+                          {corePresentations.map((presentation) => (
+                            <option
+                              key={presentation.code}
+                              value={presentation.code}
+                            >
+                              {presentation.display}
+                            </option>
+                          ))}
+                        </select>
+                      </Field>
+                      <p className="triage-philhealth-hint">
+                        Required for PhilHealth patients in the emergency room.
+                        Pick the presentation closest to the chief complaint.
+                      </p>
                     </div>
                     <Field
                       label={

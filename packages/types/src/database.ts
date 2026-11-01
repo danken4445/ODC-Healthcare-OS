@@ -1979,8 +1979,10 @@ export type Database = {
           billing_mode: Database["public"]["Enums"]["billing_mode"] | null
           billing_mode_source: string | null
           class_code: string
+          core_presentation_code: string | null
           created_at: string
           diagnosis: Json
+          discharge_outcome: string | null
           encounter_setting: string | null
           id: string
           objective_note: string | null
@@ -1991,9 +1993,14 @@ export type Database = {
           plan_note: string | null
           practitioner_role_id: string | null
           reason_codes: Json
+          referred_from_facility: string | null
+          referred_from_reason: string | null
+          referred_to_facility: string | null
+          referred_to_reason: string | null
           service_type: string | null
           status: Database["public"]["Enums"]["encounter_status"]
           subject_note: string | null
+          triage_level: number | null
           type_codes: Json
           updated_at: string
           version: number
@@ -2006,8 +2013,10 @@ export type Database = {
           billing_mode?: Database["public"]["Enums"]["billing_mode"] | null
           billing_mode_source?: string | null
           class_code?: string
+          core_presentation_code?: string | null
           created_at?: string
           diagnosis?: Json
+          discharge_outcome?: string | null
           encounter_setting?: string | null
           id?: string
           objective_note?: string | null
@@ -2018,9 +2027,14 @@ export type Database = {
           plan_note?: string | null
           practitioner_role_id?: string | null
           reason_codes?: Json
+          referred_from_facility?: string | null
+          referred_from_reason?: string | null
+          referred_to_facility?: string | null
+          referred_to_reason?: string | null
           service_type?: string | null
           status?: Database["public"]["Enums"]["encounter_status"]
           subject_note?: string | null
+          triage_level?: number | null
           type_codes?: Json
           updated_at?: string
           version?: number
@@ -2033,8 +2047,10 @@ export type Database = {
           billing_mode?: Database["public"]["Enums"]["billing_mode"] | null
           billing_mode_source?: string | null
           class_code?: string
+          core_presentation_code?: string | null
           created_at?: string
           diagnosis?: Json
+          discharge_outcome?: string | null
           encounter_setting?: string | null
           id?: string
           objective_note?: string | null
@@ -2045,9 +2061,14 @@ export type Database = {
           plan_note?: string | null
           practitioner_role_id?: string | null
           reason_codes?: Json
+          referred_from_facility?: string | null
+          referred_from_reason?: string | null
+          referred_to_facility?: string | null
+          referred_to_reason?: string | null
           service_type?: string | null
           status?: Database["public"]["Enums"]["encounter_status"]
           subject_note?: string | null
+          triage_level?: number | null
           type_codes?: Json
           updated_at?: string
           version?: number
@@ -2066,6 +2087,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "coverages"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "encounters_core_presentation_code_fkey"
+            columns: ["core_presentation_code"]
+            isOneToOne: false
+            referencedRelation: "philhealth_core_presentations"
+            referencedColumns: ["code"]
           },
           {
             foreignKeyName: "encounters_organization_id_fkey"
@@ -4191,6 +4219,27 @@ export type Database = {
           },
         ]
       }
+      philhealth_core_presentations: {
+        Row: {
+          active: boolean
+          code: string
+          display: string
+          sort_order: number
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          display: string
+          sort_order: number
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          display?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       platform_admins: {
         Row: {
           granted_at: string
@@ -5752,6 +5801,16 @@ export type Database = {
         }
         Returns: string
       }
+      check_in_appointment: {
+        Args: {
+          p_appointment_id: string
+          p_encounter_setting?: string
+          p_accommodation_type?: string
+          p_referred_from_facility?: string
+          p_referred_from_reason?: string
+        }
+        Returns: string
+      }
       claim_walk_in_patient: {
         Args: {
           p_organization_id: string
@@ -5931,6 +5990,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      discharge_details_problems: {
+        Args: {
+          p_encounter: unknown
+          p_outcome: string
+          p_to_facility: string
+          p_to_reason: string
+        }
+        Returns: string[]
+      }
       disperse_inventory_requisition_item: {
         Args: {
           p_requisition_item_id: string
@@ -6001,6 +6069,9 @@ export type Database = {
             Args: {
               p_encounter_id: string
               p_expected_version: number
+              p_discharge_outcome?: string
+              p_referred_to_facility?: string
+              p_referred_to_reason?: string
             }
             Returns: number
           }
@@ -6675,6 +6746,12 @@ export type Database = {
         }
         Returns: Json
       }
+      get_philhealth_claim_document_base: {
+        Args: {
+          p_claim_id: string
+        }
+        Returns: Json
+      }
       get_portal_access: {
         Args: {
           p_portal: string
@@ -6860,6 +6937,12 @@ export type Database = {
         Args: {
           target_patient_id: string
           target_organization_id: string
+        }
+        Returns: boolean
+      }
+      is_philhealth_visit: {
+        Args: {
+          p_encounter: unknown
         }
         Returns: boolean
       }
@@ -7262,11 +7345,24 @@ export type Database = {
           results: Json
         }[]
       }
+      patient_has_philhealth_coverage: {
+        Args: {
+          p_organization_id: string
+          p_patient_id: string
+        }
+        Returns: boolean
+      }
       philhealth_staff_can_edit: {
         Args: {
           p_organization_id: string
         }
         Returns: boolean
+      }
+      philhealth_visit_context_problems: {
+        Args: {
+          p_encounter: unknown
+        }
+        Returns: string[]
       }
       raise_encounter_version_conflict: {
         Args: {
@@ -7339,6 +7435,15 @@ export type Database = {
         }
         Returns: string
       }
+      record_encounter_discharge: {
+        Args: {
+          p_encounter_id: string
+          p_discharge_outcome: string
+          p_referred_to_facility?: string
+          p_referred_to_reason?: string
+        }
+        Returns: undefined
+      }
       record_encounter_region_diagnosis: {
         Args: {
           p_encounter_id: string
@@ -7400,6 +7505,8 @@ export type Database = {
           p_chief_complaint?: string
           p_notes?: string
           p_supersedes_id?: string
+          p_triage_level?: number
+          p_core_presentation_code?: string
         }
         Returns: string
       }
