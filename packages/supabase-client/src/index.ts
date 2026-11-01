@@ -43,6 +43,9 @@ import {
   type SoapWriteResult,
   type EncounterLockSummary,
   type TriageVitalSignsInput,
+  type CheckInDetails,
+  type DischargeDetails,
+  type PhilhealthCorePresentation,
   type OrganizationClinicalRecords,
   type PatientAccessRecords,
   type PatientRegistrationInput,
@@ -1049,6 +1052,8 @@ export async function recordTriageVitalSigns(
     p_chief_complaint: input.chiefComplaint ?? undefined,
     p_notes: input.notes ?? undefined,
     p_supersedes_id: input.supersedesId ?? undefined,
+    p_triage_level: input.triageLevel ?? undefined,
+    p_core_presentation_code: input.corePresentationCode ?? undefined,
   });
   return error ? failure(error) : success(data);
 }
@@ -1109,16 +1114,66 @@ export async function issueMedicalCertificate(
   return error ? failure(error) : success(data);
 }
 
+/** Finishes a visit; PhilHealth visits also need the discharge outcome. */
 export async function finishClinicalEncounter(
   client: SupabaseClient<Database>,
   encounterId: string,
   expectedVersion?: number | null,
+  discharge?: DischargeDetails | null,
 ): Promise<SupabaseResult<number>> {
   const { data, error } = await client.rpc("finish_clinical_encounter", {
     p_encounter_id: encounterId,
     p_expected_version: expectedVersion ?? null,
+    p_discharge_outcome: discharge?.outcome ?? null,
+    p_referred_to_facility: discharge?.referredToFacility ?? null,
+    p_referred_to_reason: discharge?.referredToReason ?? null,
   } as never);
   return error ? failure(error) : success(data);
+}
+
+/** The discharge outcome and transfer recorded on an encounter. */
+export async function getEncounterDischarge(
+  client: SupabaseClient<Database>,
+  encounterId: string,
+): Promise<SupabaseResult<DischargeDetails>> {
+  const { data, error } = await client
+    .from("encounters")
+    .select("discharge_outcome, referred_to_facility, referred_to_reason")
+    .eq("id", encounterId)
+    .single();
+  if (error) return failure(error);
+  return success({
+    outcome: (data.discharge_outcome ?? null) as DischargeDetails["outcome"],
+    referredToFacility: data.referred_to_facility,
+    referredToReason: data.referred_to_reason,
+  });
+}
+
+/** Records or corrects the discharge outcome after finishing, until the claim is submitted. */
+export async function recordEncounterDischarge(
+  client: SupabaseClient<Database>,
+  encounterId: string,
+  discharge: DischargeDetails,
+): Promise<SupabaseResult<undefined>> {
+  const { error } = await client.rpc("record_encounter_discharge", {
+    p_encounter_id: encounterId,
+    p_discharge_outcome: discharge.outcome ?? "",
+    p_referred_to_facility: discharge.referredToFacility ?? undefined,
+    p_referred_to_reason: discharge.referredToReason ?? undefined,
+  });
+  return error ? failure(error) : success(undefined);
+}
+
+/** PC 2025-0020 Annex A core presentations, in circular order. */
+export async function listPhilhealthCorePresentations(
+  client: SupabaseClient<Database>,
+): Promise<SupabaseResult<PhilhealthCorePresentation[]>> {
+  const { data, error } = await client
+    .from("philhealth_core_presentations")
+    .select("code, display")
+    .eq("active", true)
+    .order("sort_order");
+  return error ? failure(error) : success(data ?? []);
 }
 
 export async function acquireEncounterLock(
@@ -3607,6 +3662,32 @@ export async function updateAppointmentStatus(
     status,
   });
   return success(undefined);
+}
+
+/**
+ * Front-desk check-in with the visit context PhilHealth claims need. Without
+ * details it is the plain one-click check-in. Returns the encounter it opened.
+ */
+export async function checkInAppointment(
+  client: SupabaseClient<Database>,
+  appointmentId: string,
+  details: CheckInDetails = {},
+  organizationId?: string,
+): Promise<SupabaseResult<string | null>> {
+  const { data, error } = await client.rpc("check_in_appointment", {
+    p_appointment_id: appointmentId,
+    p_encounter_setting: details.encounterSetting ?? undefined,
+    p_accommodation_type: details.accommodationType ?? undefined,
+    p_referred_from_facility: details.referredFromFacility ?? undefined,
+    p_referred_from_reason: details.referredFromReason ?? undefined,
+  });
+  if (error) return failure(error);
+  broadcastAppointmentBooked({
+    appointmentId,
+    organizationId,
+    status: "arrived",
+  });
+  return success(data ?? null);
 }
 
 /** Cancels an appointment, with the option to retain/free the slot or block it. */
