@@ -633,78 +633,102 @@ export type Database = {
       claims: {
         Row: {
           adjudicated_at: string | null
+          adjudicated_by: string | null
           adjudication_result: string | null
           approved_amount: number | null
+          approved_amount_centavos: number | null
           billable_period_end: string | null
           billable_period_start: string | null
           billing_event_id: string | null
           claim_type: string
+          claimed_amount_centavos: number | null
           coverage_id: string | null
           created_at: string
+          currency: string
           denied_reason: string | null
           encounter_id: string | null
           id: string
           items: Json
           organization_id: string
           patient_id: string
+          payer_type: string | null
           payor_type: Database["public"]["Enums"]["payor_type"] | null
           philhealth_claim_number: string | null
+          primary_icd10_code: string | null
           priority_code: string | null
           provider_organization_id: string | null
+          state: Database["public"]["Enums"]["claim_lifecycle_state"]
           status: Database["public"]["Enums"]["claim_status"]
           submitted_at: string | null
+          submitted_by: string | null
           total: number | null
           updated_at: string
           use: string
         }
         Insert: {
           adjudicated_at?: string | null
+          adjudicated_by?: string | null
           adjudication_result?: string | null
           approved_amount?: number | null
+          approved_amount_centavos?: number | null
           billable_period_end?: string | null
           billable_period_start?: string | null
           billing_event_id?: string | null
           claim_type: string
+          claimed_amount_centavos?: number | null
           coverage_id?: string | null
           created_at?: string
+          currency?: string
           denied_reason?: string | null
           encounter_id?: string | null
           id?: string
           items?: Json
           organization_id: string
           patient_id: string
+          payer_type?: string | null
           payor_type?: Database["public"]["Enums"]["payor_type"] | null
           philhealth_claim_number?: string | null
+          primary_icd10_code?: string | null
           priority_code?: string | null
           provider_organization_id?: string | null
+          state?: Database["public"]["Enums"]["claim_lifecycle_state"]
           status?: Database["public"]["Enums"]["claim_status"]
           submitted_at?: string | null
+          submitted_by?: string | null
           total?: number | null
           updated_at?: string
           use?: string
         }
         Update: {
           adjudicated_at?: string | null
+          adjudicated_by?: string | null
           adjudication_result?: string | null
           approved_amount?: number | null
+          approved_amount_centavos?: number | null
           billable_period_end?: string | null
           billable_period_start?: string | null
           billing_event_id?: string | null
           claim_type?: string
+          claimed_amount_centavos?: number | null
           coverage_id?: string | null
           created_at?: string
+          currency?: string
           denied_reason?: string | null
           encounter_id?: string | null
           id?: string
           items?: Json
           organization_id?: string
           patient_id?: string
+          payer_type?: string | null
           payor_type?: Database["public"]["Enums"]["payor_type"] | null
           philhealth_claim_number?: string | null
+          primary_icd10_code?: string | null
           priority_code?: string | null
           provider_organization_id?: string | null
+          state?: Database["public"]["Enums"]["claim_lifecycle_state"]
           status?: Database["public"]["Enums"]["claim_status"]
           submitted_at?: string | null
+          submitted_by?: string | null
           total?: number | null
           updated_at?: string
           use?: string
@@ -1038,7 +1062,9 @@ export type Database = {
           clinical_status: string
           code: string
           code_display: string
+          code_system: string
           created_at: string
+          diagnosis_rank: number | null
           encounter_id: string | null
           id: string
           is_sensitive: boolean
@@ -1046,6 +1072,7 @@ export type Database = {
           organization_id: string
           patient_id: string
           recorded_by_name: string | null
+          recorded_by_practitioner_id: string | null
           resolved_date: string | null
           sensitive_category: string | null
           updated_at: string
@@ -1055,7 +1082,9 @@ export type Database = {
           clinical_status?: string
           code: string
           code_display: string
+          code_system?: string
           created_at?: string
+          diagnosis_rank?: number | null
           encounter_id?: string | null
           id?: string
           is_sensitive?: boolean
@@ -1063,6 +1092,7 @@ export type Database = {
           organization_id: string
           patient_id: string
           recorded_by_name?: string | null
+          recorded_by_practitioner_id?: string | null
           resolved_date?: string | null
           sensitive_category?: string | null
           updated_at?: string
@@ -1072,7 +1102,9 @@ export type Database = {
           clinical_status?: string
           code?: string
           code_display?: string
+          code_system?: string
           created_at?: string
+          diagnosis_rank?: number | null
           encounter_id?: string | null
           id?: string
           is_sensitive?: boolean
@@ -1080,6 +1112,7 @@ export type Database = {
           organization_id?: string
           patient_id?: string
           recorded_by_name?: string | null
+          recorded_by_practitioner_id?: string | null
           resolved_date?: string | null
           sensitive_category?: string | null
           updated_at?: string
@@ -1107,6 +1140,13 @@ export type Database = {
             referencedRelation: "patients"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "conditions_recorded_by_practitioner_id_fkey"
+            columns: ["recorded_by_practitioner_id"]
+            isOneToOne: false
+            referencedRelation: "practitioners"
+            referencedColumns: ["id"]
+          },
         ]
       }
       coverages: {
@@ -1126,6 +1166,8 @@ export type Database = {
           period_end: string | null
           period_start: string | null
           philhealth_category: string | null
+          philhealth_eligibility_checked_at: string | null
+          philhealth_eligibility_reference: string | null
           philhealth_id: string | null
           remaining_benefit: number | null
           status: string
@@ -1148,6 +1190,8 @@ export type Database = {
           period_end?: string | null
           period_start?: string | null
           philhealth_category?: string | null
+          philhealth_eligibility_checked_at?: string | null
+          philhealth_eligibility_reference?: string | null
           philhealth_id?: string | null
           remaining_benefit?: number | null
           status: string
@@ -1170,6 +1214,8 @@ export type Database = {
           period_end?: string | null
           period_start?: string | null
           philhealth_category?: string | null
+          philhealth_eligibility_checked_at?: string | null
+          philhealth_eligibility_reference?: string | null
           philhealth_id?: string | null
           remaining_benefit?: number | null
           status?: string
@@ -1908,6 +1954,7 @@ export type Database = {
       }
       encounters: {
         Row: {
+          accommodation_type: string | null
           appointment_id: string | null
           assessment_note: string | null
           billing_coverage_id: string | null
@@ -1916,6 +1963,7 @@ export type Database = {
           class_code: string
           created_at: string
           diagnosis: Json
+          encounter_setting: string | null
           id: string
           objective_note: string | null
           organization_id: string
@@ -1933,6 +1981,7 @@ export type Database = {
           version: number
         }
         Insert: {
+          accommodation_type?: string | null
           appointment_id?: string | null
           assessment_note?: string | null
           billing_coverage_id?: string | null
@@ -1941,6 +1990,7 @@ export type Database = {
           class_code?: string
           created_at?: string
           diagnosis?: Json
+          encounter_setting?: string | null
           id?: string
           objective_note?: string | null
           organization_id: string
@@ -1958,6 +2008,7 @@ export type Database = {
           version?: number
         }
         Update: {
+          accommodation_type?: string | null
           appointment_id?: string | null
           assessment_note?: string | null
           billing_coverage_id?: string | null
@@ -1966,6 +2017,7 @@ export type Database = {
           class_code?: string
           created_at?: string
           diagnosis?: Json
+          encounter_setting?: string | null
           id?: string
           objective_note?: string | null
           organization_id?: string
@@ -2925,12 +2977,13 @@ export type Database = {
           created_at: string
           currency: string
           department_id: string
-          encounter_id: string
+          encounter_id: string | null
           id: string
           item_id: string
           organization_id: string
-          patient_id: string
+          patient_id: string | null
           quantity: number
+          reference_text: string | null
           stock_id: string
           tagged_by: string
           unit_cost: number
@@ -2941,12 +2994,13 @@ export type Database = {
           created_at?: string
           currency: string
           department_id: string
-          encounter_id: string
+          encounter_id?: string | null
           id?: string
           item_id: string
           organization_id: string
-          patient_id: string
+          patient_id?: string | null
           quantity: number
+          reference_text?: string | null
           stock_id: string
           tagged_by: string
           unit_cost?: number
@@ -2957,12 +3011,13 @@ export type Database = {
           created_at?: string
           currency?: string
           department_id?: string
-          encounter_id?: string
+          encounter_id?: string | null
           id?: string
           item_id?: string
           organization_id?: string
-          patient_id?: string
+          patient_id?: string | null
           quantity?: number
+          reference_text?: string | null
           stock_id?: string
           tagged_by?: string
           unit_cost?: number
@@ -3543,23 +3598,35 @@ export type Database = {
       }
       organization_settings: {
         Row: {
+          balance_billing_policy: string
           created_at: string
+          facility_type: string
           fee_model: string
+          hci_accreditation_number: string | null
           organization_id: string
+          ownership: string
           queue_mode: string
           updated_at: string
         }
         Insert: {
+          balance_billing_policy?: string
           created_at?: string
+          facility_type?: string
           fee_model?: string
+          hci_accreditation_number?: string | null
           organization_id: string
+          ownership?: string
           queue_mode?: string
           updated_at?: string
         }
         Update: {
+          balance_billing_policy?: string
           created_at?: string
+          facility_type?: string
           fee_model?: string
+          hci_accreditation_number?: string | null
           organization_id?: string
+          ownership?: string
           queue_mode?: string
           updated_at?: string
         }
@@ -3824,6 +3891,284 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pharmacy_prescription_order_events: {
+        Row: {
+          actor_id: string
+          created_at: string
+          id: string
+          line_id: string | null
+          metadata: Json
+          order_id: string
+          organization_id: string
+          reason: string | null
+          status: string
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          id?: string
+          line_id?: string | null
+          metadata?: Json
+          order_id: string
+          organization_id: string
+          reason?: string | null
+          status: string
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          id?: string
+          line_id?: string | null
+          metadata?: Json
+          order_id?: string
+          organization_id?: string
+          reason?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pharmacy_prescription_order_event_order_id_organization_id_fkey"
+            columns: ["order_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "pharmacy_prescription_orders"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "pharmacy_prescription_order_events_line_id_fkey"
+            columns: ["line_id"]
+            isOneToOne: false
+            referencedRelation: "pharmacy_prescription_order_lines"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pharmacy_prescription_order_events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pharmacy_prescription_order_lines: {
+        Row: {
+          created_at: string
+          dispensed_quantity: number
+          dosage_instruction: string | null
+          id: string
+          item_id: string | null
+          line_total_in_centavos: number | null
+          notes: string | null
+          order_id: string
+          organization_id: string
+          original_medication: string
+          pharmacist_reason: string | null
+          requested_quantity: number
+          status: string
+          unit_of_measure: string | null
+          unit_price_in_centavos: number | null
+          updated_at: string
+          usage_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          dispensed_quantity?: number
+          dosage_instruction?: string | null
+          id?: string
+          item_id?: string | null
+          line_total_in_centavos?: number | null
+          notes?: string | null
+          order_id: string
+          organization_id: string
+          original_medication: string
+          pharmacist_reason?: string | null
+          requested_quantity: number
+          status?: string
+          unit_of_measure?: string | null
+          unit_price_in_centavos?: number | null
+          updated_at?: string
+          usage_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          dispensed_quantity?: number
+          dosage_instruction?: string | null
+          id?: string
+          item_id?: string | null
+          line_total_in_centavos?: number | null
+          notes?: string | null
+          order_id?: string
+          organization_id?: string
+          original_medication?: string
+          pharmacist_reason?: string | null
+          requested_quantity?: number
+          status?: string
+          unit_of_measure?: string | null
+          unit_price_in_centavos?: number | null
+          updated_at?: string
+          usage_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pharmacy_prescription_order_lines_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pharmacy_prescription_order_lines_item_id_organization_id_fkey"
+            columns: ["item_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "pharmacy_prescription_order_lines_order_id_organization_id_fkey"
+            columns: ["order_id", "organization_id"]
+            isOneToOne: false
+            referencedRelation: "pharmacy_prescription_orders"
+            referencedColumns: ["id", "organization_id"]
+          },
+          {
+            foreignKeyName: "pharmacy_prescription_order_lines_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pharmacy_prescription_order_lines_usage_id_fkey"
+            columns: ["usage_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_usages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pharmacy_prescription_orders: {
+        Row: {
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string
+          encounter_id: string | null
+          id: string
+          invoice_id: string | null
+          medication_request_id: string | null
+          notes: string | null
+          organization_id: string
+          patient_id: string | null
+          patient_reference: string | null
+          physical_prescription_reference: string | null
+          pos_sale_id: string | null
+          prescriber_name: string | null
+          priority: string
+          receipt_number: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source_type: string
+          status: string
+          submitted_at: string
+          submitted_by: string
+          updated_at: string
+          ward_reference: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          encounter_id?: string | null
+          id?: string
+          invoice_id?: string | null
+          medication_request_id?: string | null
+          notes?: string | null
+          organization_id: string
+          patient_id?: string | null
+          patient_reference?: string | null
+          physical_prescription_reference?: string | null
+          pos_sale_id?: string | null
+          prescriber_name?: string | null
+          priority?: string
+          receipt_number?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_type?: string
+          status?: string
+          submitted_at?: string
+          submitted_by: string
+          updated_at?: string
+          ward_reference?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string
+          encounter_id?: string | null
+          id?: string
+          invoice_id?: string | null
+          medication_request_id?: string | null
+          notes?: string | null
+          organization_id?: string
+          patient_id?: string | null
+          patient_reference?: string | null
+          physical_prescription_reference?: string | null
+          pos_sale_id?: string | null
+          prescriber_name?: string | null
+          priority?: string
+          receipt_number?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source_type?: string
+          status?: string
+          submitted_at?: string
+          submitted_by?: string
+          updated_at?: string
+          ward_reference?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pharmacy_prescription_orders_encounter_id_fkey"
+            columns: ["encounter_id"]
+            isOneToOne: false
+            referencedRelation: "encounters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pharmacy_prescription_orders_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pharmacy_prescription_orders_medication_request_id_fkey"
+            columns: ["medication_request_id"]
+            isOneToOne: false
+            referencedRelation: "medication_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pharmacy_prescription_orders_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pharmacy_prescription_orders_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pharmacy_prescription_orders_pos_sale_id_fkey"
+            columns: ["pos_sale_id"]
+            isOneToOne: false
+            referencedRelation: "pos_sales"
             referencedColumns: ["id"]
           },
         ]
@@ -4104,6 +4449,7 @@ export type Database = {
           customer_name: string | null
           id: string
           organization_id: string
+          patient_balance_due_in_centavos: number | null
           receipt_number: string
           standard_total_in_centavos: number | null
           status: Database["public"]["Enums"]["pos_sale_status"]
@@ -4117,6 +4463,7 @@ export type Database = {
           customer_name?: string | null
           id?: string
           organization_id: string
+          patient_balance_due_in_centavos?: number | null
           receipt_number: string
           standard_total_in_centavos?: number | null
           status?: Database["public"]["Enums"]["pos_sale_status"]
@@ -4130,6 +4477,7 @@ export type Database = {
           customer_name?: string | null
           id?: string
           organization_id?: string
+          patient_balance_due_in_centavos?: number | null
           receipt_number?: string
           standard_total_in_centavos?: number | null
           status?: Database["public"]["Enums"]["pos_sale_status"]
@@ -5236,6 +5584,12 @@ export type Database = {
         }
         Returns: undefined
       }
+      assert_encounter_condition_writer: {
+        Args: {
+          p_encounter: unknown
+        }
+        Returns: string
+      }
       assert_encounter_writer: {
         Args: {
           p_encounter: unknown
@@ -5282,6 +5636,21 @@ export type Database = {
           p_department_id: string
         }
         Returns: undefined
+      }
+      assign_staff_role: {
+        Args: {
+          p_organization_id: string
+          p_user_id: string
+          p_role_code: string
+        }
+        Returns: undefined
+      }
+      billed_on_finalized_event: {
+        Args: {
+          p_source_type: string
+          p_source_id: string
+        }
+        Returns: string
       }
       book_appointment: {
         Args: {
@@ -5371,6 +5740,13 @@ export type Database = {
         }
         Returns: undefined
       }
+      complete_pharmacy_prescription_order: {
+        Args: {
+          p_order_id: string
+          p_outcomes: Json
+        }
+        Returns: Json
+      }
       confirm_inventory_holds_for_billing_event: {
         Args: {
           p_billing_event_id: string
@@ -5441,6 +5817,18 @@ export type Database = {
         }
         Returns: string
       }
+      create_pharmacy_prescription_transcription: {
+        Args: {
+          p_organization_id: string
+          p_patient_id: string
+          p_encounter_id: string
+          p_prescription_reference: string
+          p_prescriber_name: string
+          p_items: Json
+          p_priority?: string
+        }
+        Returns: string
+      }
       create_pmr_share_link: {
         Args: {
           p_document_id: string
@@ -5471,6 +5859,18 @@ export type Database = {
         }
         Returns: Json
       }
+      create_standalone_pharmacy_inventory_order: {
+        Args: {
+          p_organization_id: string
+          p_patient_reference: string
+          p_ward_reference: string
+          p_prescription_reference: string
+          p_prescriber_name: string
+          p_items: Json
+          p_priority?: string
+        }
+        Returns: string
+      }
       create_walk_in_patient: {
         Args: {
           p_organization_id: string
@@ -5485,6 +5885,13 @@ export type Database = {
           pin: string
         }[]
       }
+      delete_clinic_role_definition: {
+        Args: {
+          p_organization_id: string
+          p_code: string
+        }
+        Returns: undefined
+      }
       delete_laboratory_service: {
         Args: {
           p_service_id: string
@@ -5496,6 +5903,12 @@ export type Database = {
         Args: {
           p_requisition_item_id: string
           p_quantity?: number
+        }
+        Returns: string
+      }
+      effective_balance_billing_policy: {
+        Args: {
+          p_organization_id: string
         }
         Returns: string
       }
@@ -6114,6 +6527,12 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: Json
       }
+      get_organization_billing_profile: {
+        Args: {
+          p_organization_id: string
+        }
+        Returns: Json
+      }
       get_organization_facility_classification: {
         Args: {
           p_organization_id: string
@@ -6195,6 +6614,19 @@ export type Database = {
       get_patient_invoices: {
         Args: {
           p_organization_id: string
+        }
+        Returns: Json
+      }
+      get_pharmacy_prescription_availability: {
+        Args: {
+          p_organization_id: string
+          p_items: Json
+        }
+        Returns: Json
+      }
+      get_philhealth_claim_document: {
+        Args: {
+          p_claim_id: string
         }
         Returns: Json
       }
@@ -6392,6 +6824,12 @@ export type Database = {
         }
         Returns: Json
       }
+      issue_billing_invoice_without_claim: {
+        Args: {
+          p_billing_event_id: string
+        }
+        Returns: Json
+      }
       issue_medical_certificate: {
         Args: {
           p_encounter_id: string
@@ -6437,6 +6875,32 @@ export type Database = {
           end_at: string
           status: string
           queue_label: string
+        }[]
+      }
+      list_clinic_operations_logs: {
+        Args: {
+          p_organization_id: string
+          p_module?: string
+          p_action?: string
+          p_actor_id?: string
+          p_start_time?: string
+          p_end_time?: string
+          p_search?: string
+          p_limit?: number
+          p_offset?: number
+        }
+        Returns: {
+          id: number
+          occurred_at: string
+          actor_id: string
+          actor_name: string
+          actor_type: string
+          module: string
+          action: string
+          table_name: string
+          record_id: string
+          description: string
+          metadata: Json
         }[]
       }
       list_clinic_role_definitions: {
@@ -6533,6 +6997,21 @@ export type Database = {
           updated_at: string
         }[]
       }
+      list_encounter_conditions: {
+        Args: {
+          p_encounter_id: string
+        }
+        Returns: {
+          id: string
+          code: string
+          code_display: string
+          diagnosis_rank: number
+          verification_status: string
+          case_rate: number
+          recorded_by_name: string
+          created_at: string
+        }[]
+      }
       list_governance_patients: {
         Args: {
           p_organization_id: string
@@ -6626,6 +7105,13 @@ export type Database = {
           record_id: string
           metadata: Json
         }[]
+      }
+      list_pharmacy_prescription_queue: {
+        Args: {
+          p_organization_id: string
+          p_status?: string
+        }
+        Returns: Json
       }
       list_practitioner_queue_prefixes: {
         Args: {
@@ -6775,6 +7261,15 @@ export type Database = {
         }
         Returns: string
       }
+      record_encounter_condition: {
+        Args: {
+          p_encounter_id: string
+          p_icd10_code: string
+          p_diagnosis_rank?: number
+          p_verification_status?: string
+        }
+        Returns: string
+      }
       record_encounter_region_diagnosis: {
         Args: {
           p_encounter_id: string
@@ -6812,6 +7307,14 @@ export type Database = {
         }
         Returns: number
       }
+      record_standalone_pharmacy_inventory_usage: {
+        Args: {
+          p_order_id: string
+          p_stock_id: string
+          p_quantity: number
+        }
+        Returns: string
+      }
       record_triage_vital_signs: {
         Args: {
           p_appointment_id: string
@@ -6845,9 +7348,28 @@ export type Database = {
         }
         Returns: undefined
       }
+      refresh_philhealth_claim_for_encounter: {
+        Args: {
+          p_encounter_id: string
+        }
+        Returns: string
+      }
       release_encounter_lock: {
         Args: {
           p_encounter_id: string
+        }
+        Returns: undefined
+      }
+      remove_encounter_condition: {
+        Args: {
+          p_condition_id: string
+        }
+        Returns: undefined
+      }
+      reset_clinic_role_permissions: {
+        Args: {
+          p_organization_id: string
+          p_code: string
         }
         Returns: undefined
       }
@@ -6856,6 +7378,7 @@ export type Database = {
           p_organization_id: string
           p_patient_id: string
           p_clinic_service_id?: string
+          p_encounter_id?: string
         }
         Returns: {
           billing_mode: Database["public"]["Enums"]["billing_mode"]
@@ -6876,9 +7399,28 @@ export type Database = {
         }
         Returns: string
       }
+      resolve_philhealth_membership: {
+        Args: {
+          p_organization_id: string
+          p_patient_id: string
+        }
+        Returns: {
+          coverage_id: string
+          is_member: boolean
+          is_nbb_category: boolean
+        }[]
+      }
       retire_provider_clinic_service: {
         Args: {
           p_service_id: string
+        }
+        Returns: undefined
+      }
+      review_pharmacy_prescription_order: {
+        Args: {
+          p_order_id: string
+          p_updates: Json
+          p_reason?: string
         }
         Returns: undefined
       }
@@ -7016,6 +7558,17 @@ export type Database = {
             }
             Returns: string
           }
+      save_patient_philhealth_coverage: {
+        Args: {
+          p_organization_id: string
+          p_patient_id: string
+          p_philhealth_id: string
+          p_category: string
+          p_beneficiary_relationship?: string
+          p_eligibility_reference?: string
+        }
+        Returns: string
+      }
       save_provider_clinic_service: {
         Args: {
           p_service_id: string
@@ -7122,6 +7675,16 @@ export type Database = {
         }
         Returns: string
       }
+      set_organization_billing_profile: {
+        Args: {
+          p_organization_id: string
+          p_facility_type: string
+          p_ownership: string
+          p_balance_billing_policy: string
+          p_hci_accreditation_number?: string
+        }
+        Returns: Json
+      }
       set_organization_facility_classification: {
         Args: {
           p_organization_id: string
@@ -7225,6 +7788,7 @@ export type Database = {
           p_is_emergency?: boolean
           p_emergency_justification?: string
           p_simulated_date?: string
+          p_supply_department_id?: string
         }
         Returns: string
       }
@@ -7365,6 +7929,16 @@ export type Database = {
       billing_event_status: "draft" | "finalized" | "cancelled"
       billing_line_payment_status: "unpaid" | "paid" | "written_off" | "voided"
       billing_mode: "standard" | "nbb"
+      claim_lifecycle_state:
+        | "draft"
+        | "clean_validated"
+        | "batched"
+        | "submitted"
+        | "acknowledged"
+        | "returned"
+        | "adjudicated"
+        | "settled"
+        | "disputed"
       claim_status: "active" | "cancelled" | "draft" | "entered_in_error"
       diagnostic_report_status:
         | "registered"

@@ -3450,3 +3450,13 @@ main > [role="status"] { margin: 1rem 0 0; color: var(--odyssey-muted-foreground
     align-items: flex-start;
   }
 }
+
+/* Encounter ICD-10 diagnosis panel */
+.encounter-diagnosis-panel { margin-top: 1rem; }
+.encounter-diagnosis-list, .encounter-diagnosis-results { display: grid; gap: .5rem; margin: 0 0 .85rem; padding: 0; list-style: none; }
+.encounter-diagnosis-list li { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.encounter-diagnosis-list li > span:first-child { flex: 1 1 14rem; min-width: 0; }
+.encounter-diagnosis-actions { display: flex; gap: .4rem; }
+.encounter-diagnosis-results button { width: 100%; padding: .5rem .65rem; border: 1px solid var(--odyssey-border); border-radius: .4rem; background: var(--odyssey-card); color: var(--odyssey-foreground); font: inherit; text-align: left; cursor: pointer; }
+.encounter-diagnosis-results button:hover, .encounter-diagnosis-results button:focus-visible { border-color: var(--odyssey-primary); outline: 2px solid var(--odyssey-focus); outline-offset: 1px; }
+.encounter-diagnosis-results button:disabled { cursor: progress; opacity: .6; }

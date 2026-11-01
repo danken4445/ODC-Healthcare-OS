@@ -1244,6 +1244,17 @@ export interface PosSaleSummary {
   total: number;
 }
 
+export type ClaimLifecycleState =
+  | "draft"
+  | "clean_validated"
+  | "batched"
+  | "submitted"
+  | "acknowledged"
+  | "returned"
+  | "adjudicated"
+  | "settled"
+  | "disputed";
+
 export interface ClaimSummary {
   id: string;
   patient_id: string;
@@ -1251,10 +1262,15 @@ export interface ClaimSummary {
   encounter_id: string | null;
   coverage_id: string | null;
   status: string;
+  state: ClaimLifecycleState;
   use: string;
   claim_type: string;
   payor_type: PayorType | null;
+  payer_type: "philhealth" | "hmo" | "corporate_account" | null;
   total: number | null;
+  claimed_amount_centavos: number | null;
+  approved_amount_centavos: number | null;
+  primary_icd10_code: string | null;
   submitted_at: string | null;
   adjudicated_at: string | null;
   adjudication_result: "approved" | "denied" | "partial" | null;
@@ -1640,6 +1656,123 @@ export interface FacilityClassification {
   defaultPayorType: PayorType;
   isGovernmentNoBilling: boolean;
   canManage: boolean;
+}
+
+export type FacilityType =
+  | "clinic"
+  | "infirmary"
+  | "hospital_level_1"
+  | "hospital_level_2"
+  | "hospital_level_3";
+export type FacilityOwnership = "private" | "doh_retained" | "lgu" | "other_government";
+/** none, PhilHealth No Balance Billing, DOH Zero Balance Billing, or the legacy facility-wide subsidy. */
+export type BalanceBillingPolicy = "none" | "nbb" | "zbb" | "facility_wide_subsidy";
+
+export interface OrganizationBillingProfile {
+  organizationId: string;
+  facilityType: FacilityType;
+  ownership: FacilityOwnership;
+  balanceBillingPolicy: BalanceBillingPolicy;
+  hciAccreditationNumber: string | null;
+  canManage: boolean;
+}
+
+export type PhilhealthSoaCategory =
+  | "medicines"
+  | "supplies"
+  | "laboratory"
+  | "other_services"
+  | "professional_fee";
+
+/** One visit charge with the Statement of Account split, in centavos. */
+export interface PhilhealthClaimDocumentLine {
+  id: string;
+  service_date: string;
+  item_code: string | null;
+  description: string;
+  unit: string;
+  quantity: number;
+  unit_price_centavos: number;
+  line_total_centavos: number;
+  soa_category: PhilhealthSoaCategory;
+  on_claim: boolean;
+  discount_centavos: number;
+  phic_centavos: number;
+  excess_centavos: number;
+}
+
+/** Data behind the PHIC Statement of Account, Itemized Charges and Claim Signature Form. */
+export interface PhilhealthClaimDocument {
+  soa_number: string;
+  /** "claimed_charges" until the PhilHealth fee-schedule engine computes PHIC amounts. */
+  phic_basis: "claimed_charges" | "fee_schedule";
+  facility: {
+    name: string;
+    address: string | null;
+    hci_accreditation_number: string | null;
+    facility_type: string | null;
+    ownership: string | null;
+  };
+  patient: {
+    id: string;
+    number: string;
+    name: string;
+    sex: string | null;
+    birth_date: string | null;
+    address: string | null;
+  };
+  member: {
+    pin: string | null;
+    category: string | null;
+    relationship: string;
+    eligibility_reference: string | null;
+  };
+  encounter: {
+    id: string;
+    transaction_number: string;
+    setting: string | null;
+    admitted_at: string | null;
+    discharged_at: string | null;
+    attending_name: string | null;
+    attending_accreditation: string | null;
+  };
+  diagnoses: { code: string; description: string; rank: number | null }[];
+  claim: {
+    id: string;
+    state: ClaimLifecycleState;
+    payer_type: string | null;
+    primary_icd10_code: string | null;
+    claimed_amount_centavos: number | null;
+    approved_amount_centavos: number | null;
+    adjudication_result: string | null;
+    submitted_at: string | null;
+    philhealth_claim_number: string | null;
+  };
+  lines: PhilhealthClaimDocumentLine[];
+  payments_centavos: number;
+  prepared_by: string | null;
+  generated_at: string;
+}
+
+/** PhilHealth member categories; indigent, sponsored, kasambahay, senior and lifetime qualify for NBB. */
+export type PhilhealthMemberCategory =
+  | "employed"
+  | "voluntary"
+  | "indigent"
+  | "senior"
+  | "sponsored"
+  | "lifetime"
+  | "kasambahay";
+
+export interface EncounterCondition {
+  id: string;
+  code: string;
+  codeDisplay: string;
+  diagnosisRank: number | null;
+  verificationStatus: "provisional" | "differential" | "confirmed";
+  caseRate: number | null;
+  recordedByName: string | null;
+  createdAt: string;
 }
 
 export * from "./pmr";

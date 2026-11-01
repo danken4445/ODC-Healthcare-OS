@@ -3644,7 +3644,7 @@ export default function InventoryPage() {
                   {
                     id: "encounter",
                     header: "Encounter",
-                    cell: (row) => row.encounter_id.slice(0, 8),
+                    cell: (row) => row.encounter_id?.slice(0, 8) ?? "Standalone",
                   },
                   {
                     id: "taggedBy",

@@ -108,6 +108,13 @@ import {
   type PaymentMethod,
   type FacilityBillingMode,
   type FacilityClassification,
+  type BalanceBillingPolicy,
+  type EncounterCondition,
+  type FacilityOwnership,
+  type FacilityType,
+  type OrganizationBillingProfile,
+  type PhilhealthClaimDocument,
+  type PhilhealthMemberCategory,
   type PosCartItem,
   type PosCheckoutResult,
   type NbbPharmacyPosCatalogItem,
@@ -4900,6 +4907,138 @@ export async function setOrganizationFacilityClassification(
     defaultPayorType: payorType,
     isGovernmentNoBilling: payorType === "philhealth_nbb",
   });
+}
+
+function toOrganizationBillingProfile(data: unknown): OrganizationBillingProfile {
+  const row = data as {
+    organization_id: string;
+    facility_type: FacilityType;
+    ownership: FacilityOwnership;
+    balance_billing_policy: BalanceBillingPolicy;
+    hci_accreditation_number: string | null;
+    can_manage: boolean;
+  };
+  return {
+    organizationId: row.organization_id,
+    facilityType: row.facility_type,
+    ownership: row.ownership,
+    balanceBillingPolicy: row.balance_billing_policy,
+    hciAccreditationNumber: row.hci_accreditation_number,
+    canManage: row.can_manage,
+  };
+}
+
+export async function getOrganizationBillingProfile(
+  client: SupabaseClient<Database>,
+  organizationId: string,
+): Promise<SupabaseResult<OrganizationBillingProfile>> {
+  const { data, error } = await client.rpc("get_organization_billing_profile", {
+    p_organization_id: organizationId,
+  });
+  if (error) return failure(error);
+  return success(toOrganizationBillingProfile(data));
+}
+
+export async function setOrganizationBillingProfile(
+  client: SupabaseClient<Database>,
+  organizationId: string,
+  profile: Pick<
+    OrganizationBillingProfile,
+    "facilityType" | "ownership" | "balanceBillingPolicy" | "hciAccreditationNumber"
+  >,
+): Promise<SupabaseResult<OrganizationBillingProfile>> {
+  const { data, error } = await client.rpc("set_organization_billing_profile", {
+    p_organization_id: organizationId,
+    p_facility_type: profile.facilityType,
+    p_ownership: profile.ownership,
+    p_balance_billing_policy: profile.balanceBillingPolicy,
+    p_hci_accreditation_number: profile.hciAccreditationNumber ?? undefined,
+  });
+  if (error) return failure(error);
+  return success(toOrganizationBillingProfile(data));
+}
+
+/** Data for a claim's Statement of Account, Itemized Charges and Claim Signature Form. */
+export async function getPhilhealthClaimDocument(
+  client: SupabaseClient<Database>,
+  claimId: string,
+): Promise<SupabaseResult<PhilhealthClaimDocument>> {
+  const { data, error } = await client.rpc("get_philhealth_claim_document", {
+    p_claim_id: claimId,
+  });
+  if (error) return failure(error);
+  return success(data as unknown as PhilhealthClaimDocument);
+}
+
+/** Records or updates the patient's active PhilHealth coverage; the PIN is stored as NN-NNNNNNNNN-N. */
+export async function savePatientPhilhealthCoverage(
+  client: SupabaseClient<Database>,
+  input: {
+    organizationId: string;
+    patientId: string;
+    philhealthId: string;
+    category: PhilhealthMemberCategory;
+    relationship?: "self" | "spouse" | "child" | "parent";
+    eligibilityReference?: string | null;
+  },
+): Promise<SupabaseResult<string>> {
+  const { data, error } = await client.rpc("save_patient_philhealth_coverage", {
+    p_organization_id: input.organizationId,
+    p_patient_id: input.patientId,
+    p_philhealth_id: input.philhealthId,
+    p_category: input.category,
+    p_beneficiary_relationship: input.relationship ?? "self",
+    p_eligibility_reference: input.eligibilityReference ?? undefined,
+  });
+  if (error) return failure(error);
+  return success(data);
+}
+
+export async function listEncounterConditions(
+  client: SupabaseClient<Database>,
+  encounterId: string,
+): Promise<SupabaseResult<EncounterCondition[]>> {
+  const { data, error } = await client.rpc("list_encounter_conditions", {
+    p_encounter_id: encounterId,
+  });
+  if (error) return failure(error);
+  return success(
+    (data ?? []).map((row) => ({
+      id: row.id,
+      code: row.code,
+      codeDisplay: row.code_display,
+      diagnosisRank: row.diagnosis_rank,
+      verificationStatus: row.verification_status as EncounterCondition["verificationStatus"],
+      caseRate: row.case_rate,
+      recordedByName: row.recorded_by_name,
+      createdAt: row.created_at,
+    })),
+  );
+}
+
+/** Records an Annex A ICD-10 diagnosis on an encounter; rank 1 is the final diagnosis used for claims. */
+export async function recordEncounterCondition(
+  client: SupabaseClient<Database>,
+  input: { encounterId: string; icd10Code: string; diagnosisRank?: number },
+): Promise<SupabaseResult<string>> {
+  const { data, error } = await client.rpc("record_encounter_condition", {
+    p_encounter_id: input.encounterId,
+    p_icd10_code: input.icd10Code,
+    p_diagnosis_rank: input.diagnosisRank ?? 1,
+  });
+  if (error) return failure(error);
+  return success(data);
+}
+
+export async function removeEncounterCondition(
+  client: SupabaseClient<Database>,
+  conditionId: string,
+): Promise<SupabaseResult<undefined>> {
+  const { error } = await client.rpc("remove_encounter_condition", {
+    p_condition_id: conditionId,
+  });
+  if (error) return failure(error);
+  return success(undefined);
 }
 
 export async function getDocumentTemplates(

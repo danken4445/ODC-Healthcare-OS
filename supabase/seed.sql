@@ -319,7 +319,7 @@ insert into public.claims (
   status, use, claim_type, billing_event_id, payor_type,
   billable_period_start, billable_period_end,
   provider_organization_id, total, philhealth_claim_number, submitted_at,
-  items
+  payer_type, state, claimed_amount_centavos, items
 ) values (
   'a3000000-0000-0000-0000-000000000001',
   '10000000-0000-0000-0000-000000000002',
@@ -330,6 +330,7 @@ insert into public.claims (
   'a0000000-0000-0000-0000-000000000002', 'philhealth_nbb',
   current_date, current_date,
   '10000000-0000-0000-0000-000000000002', 620.00, 'PH-NBB-2026-0001', now(),
+  'philhealth', 'submitted', 62000,
   '[{"description":"Government Hospital OPD Visit","quantity":1,"unit_price":600.00,"line_total":600.00},{"description":"Other Clinic Syringe 5 mL","quantity":1,"unit_price":20.00,"line_total":20.00}]'::jsonb
 ) on conflict (id) do nothing;
 

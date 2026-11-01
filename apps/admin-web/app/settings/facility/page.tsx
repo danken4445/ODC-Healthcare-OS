@@ -4,10 +4,16 @@ import { Building2, Info, Landmark, ShieldCheck } from "lucide-react";
 import { AdminSignIn } from "../../../components/admin-sign-in";
 import { useAdminData } from "../../../components/admin-data-context";
 import { FacilityClassificationToggle } from "../../../components/facility-classification-toggle";
+import { FacilityBillingProfileForm } from "../../../components/facility-billing-profile-form";
 import { PageHeader } from "../../../components/page-header";
+import { useState } from "react";
 
 export default function FacilityClassificationPage() {
   const { email, error: accessError, loading, organization } = useAdminData();
+  // The legacy toggle and the billing profile write the same settings, so each
+  // reloads the other after a change.
+  const [toggleVersion, setToggleVersion] = useState(0);
+  const [profileVersion, setProfileVersion] = useState(0);
 
   if (!email && accessError) return <AdminSignIn />;
 
@@ -27,8 +33,16 @@ export default function FacilityClassificationPage() {
         <div style={{ display: "flex", flexDirection: "column", gap: "2rem", maxWidth: "1000px" }}>
           {/* Main Toggle Component */}
           <FacilityClassificationToggle
+            key={`toggle-${toggleVersion}`}
+            onChanged={() => setProfileVersion((version) => version + 1)}
             organizationId={organization.id}
             organizationName={organization.name}
+          />
+
+          <FacilityBillingProfileForm
+            key={`profile-${profileVersion}`}
+            onSaved={() => setToggleVersion((version) => version + 1)}
+            organizationId={organization.id}
           />
 
           {/* Operational & Regulatory Reference */}

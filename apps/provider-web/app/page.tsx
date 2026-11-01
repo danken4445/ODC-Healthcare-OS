@@ -2229,7 +2229,8 @@ export default function Home() {
                                 : "Open room"}
                             </Button>
                           </Link>
-                          {appointment.encounterStatus === "in_progress" && (
+                          {(appointment.encounterStatus === "in_progress" ||
+                            appointment.encounterStatus === "finished") && (
                             <Button
                               size="sm"
                               variant="outline"
@@ -2247,7 +2248,8 @@ export default function Home() {
                             </Button>
                           )}
                         </span>
-                      ) : appointment.encounterStatus === "in_progress" ? (
+                      ) : appointment.encounterStatus === "in_progress" ||
+                        appointment.encounterStatus === "finished" ? (
                         <Button
                           size="sm"
                           variant="outline"

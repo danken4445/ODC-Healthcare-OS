@@ -100,6 +100,7 @@ import { EncounterDevBar } from "./EncounterDevBar";
 import { EncounterSoapEditor } from "./EncounterSoapEditor";
 import { ClinicalDocumentationWorkspace } from "./ClinicalDocumentationWorkspace";
 import { ClinicalOrdersAndCharges } from "./ClinicalOrdersAndCharges";
+import { EncounterDiagnosisPanel } from "./EncounterDiagnosisPanel";
 import { LongitudinalRecord } from "./LongitudinalRecord";
 import { ClinicalTemplatePicker, type TemplateApplication } from "./template-studio";
 import {
@@ -1343,6 +1344,11 @@ export function EncounterRecordingScreen() {
                 />
               </section>
               }
+            />
+
+            <EncounterDiagnosisPanel
+              canEdit={encounter.status === "in_progress" || encounter.status === "finished"}
+              encounterId={encounterId}
             />
 
             {encounter.status === "in_progress" && (
