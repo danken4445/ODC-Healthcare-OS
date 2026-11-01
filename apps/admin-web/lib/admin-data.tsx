@@ -109,7 +109,7 @@ export const billingConfig: RecordsConfig = { dataset: "billing", title: "Billin
 ] };
 
 export const claimsConfig: RecordsConfig = { dataset: "claims", title: "HMO claims and authorizations", eyebrow: "Revenue operations", actionLabel: "File claim", description: "Track eligibility, authorization, submissions, adjudication, and remittance.", emptyMessage: "No claims were filed for this organization.", columns: [
-  { key: "claim", label: "Claim" }, { key: "patient", label: "Patient" }, { key: "payor", label: "Payor type" }, { key: "filed", label: "Submitted" }, { key: "amount", label: "Claimed", numeric: true, render: money("amount") }, { key: "approved", label: "Approved", numeric: true, render: money("approved") }, { key: "status", label: "Status", render: status },
+  { key: "claim", label: "Claim" }, { key: "patient", label: "Patient" }, { key: "payor", label: "Payor type" }, { key: "diagnosis", label: "Final diagnosis" }, { key: "filed", label: "Submitted" }, { key: "amount", label: "Claimed", numeric: true, render: money("amount") }, { key: "approved", label: "Approved", numeric: true, render: money("approved") }, { key: "status", label: "Status", render: status },
 ] };
 
 export const companiesConfig: RecordsConfig = { dataset: "companies", title: "Company accounts", eyebrow: "B2B oversight", actionLabel: "Add coverage", description: "Maintain employer-sponsored patient coverage for the selected organization.", emptyMessage: "No employer-sponsored coverage records exist for this organization.", columns: [

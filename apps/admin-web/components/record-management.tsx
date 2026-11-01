@@ -14,12 +14,14 @@ import {
   getBillableEncounters,
   getClinicRoleDefinitions,
   getGovernancePatients,
+  getPhilhealthClaimDocument,
   getStaffAdministration,
   recordPayment,
   resetClinicRolePermissions,
   saveAdminClinicService,
   saveClinicRoleDefinition,
   saveCompanyCoverage,
+  savePatientPhilhealthCoverage,
   saveDocumentTemplate,
   saveStaffDepartment,
   setClinicUserActive,
@@ -38,8 +40,9 @@ import type {
   InventoryItemSummary,
   OrganizationModuleKey,
   PaymentMethod,
+  PhilhealthMemberCategory,
 } from "@odyssey/types";
-import { Edit3, ExternalLink, Plus, Power, ReceiptText, RotateCcw, Trash2 } from "lucide-react";
+import { Edit3, ExternalLink, FileText, Plus, Power, ReceiptText, RotateCcw, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import {
@@ -49,6 +52,7 @@ import {
   type AdminDataset,
 } from "../lib/admin-data";
 import { useAdminData } from "./admin-data-context";
+import { buildClaimSignatureFormDocument, buildStatementOfAccountDocument } from "./philhealth-claim-documents";
 import type { DataRow } from "./data-table";
 import { Button } from "./ui/button";
 import { Dialog } from "./ui/dialog";
@@ -420,6 +424,35 @@ function PaymentDialog({ onChanged, row }: Pick<ManagementProps, "onChanged" | "
   return <><Button size="sm" variant="outline" onClick={() => setOpen(true)}>Record payment</Button><Dialog open={open} onOpenChange={setOpen} title="Record invoice payment" description={`${value(row, "invoice")} has an outstanding balance of ₱${Number(row?.balance ?? 0).toFixed(2)}.`}><form className="dialog-body" onSubmit={submit}><Field label="Amount"><Input name="amount" type="number" min="0.01" max={Number(row?.balance ?? 0)} step="0.01" defaultValue={value(row, "balance")} required /></Field><Field label="Payment method"><Select name="method"><option value="cash">Cash</option><option value="card">Card</option><option value="qr_ewallet">QR / e-wallet</option><option value="bank_transfer">Bank transfer</option><option value="check">Check</option></Select></Field><Field label="Reference"><Input name="reference" /></Field>{error ? <p className="form-error" role="alert">{error}</p> : null}<div className="dialog-actions"><Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit" disabled={saving}>{saving ? "Saving…" : "Record payment"}</Button></div></form></Dialog></>;
 }
 
+function ClaimDocumentButtons({ claimId }: { claimId: string }) {
+  const { client } = useAdminData();
+  const [busy, setBusy] = useState<"soa" | "csf" | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  async function openDocument(kind: "soa" | "csf") {
+    // Open the window during the click so pop-up blockers allow it, then fill it.
+    const preview = window.open("", "_blank");
+    if (!preview) return setError("Allow pop-ups for this site to open claim documents.");
+    preview.document.write("<p style=\"font:14px Arial;padding:24px\">Preparing document…</p>");
+    setBusy(kind);
+    setError(null);
+    const result = await getPhilhealthClaimDocument(client, claimId);
+    setBusy(null);
+    if (result.error) {
+      preview.close();
+      return setError(result.error.message);
+    }
+    const html = kind === "soa" ? buildStatementOfAccountDocument(result.data) : buildClaimSignatureFormDocument(result.data);
+    preview.document.open();
+    preview.document.write(html);
+    preview.document.close();
+  }
+  return <>
+    <Button size="sm" variant="outline" disabled={busy !== null} onClick={() => void openDocument("soa")} title="PHIC Statement of Account and Itemized Charges"><FileText aria-hidden="true" size={14} />{busy === "soa" ? "Preparing…" : "SOA"}</Button>
+    <Button size="sm" variant="outline" disabled={busy !== null} onClick={() => void openDocument("csf")} title="Pre-filled Claim Signature Form"><FileText aria-hidden="true" size={14} />{busy === "csf" ? "Preparing…" : "CSF"}</Button>
+    {error ? <span className="form-error" role="alert">{error}</span> : null}
+  </>;
+}
+
 function ClaimActions({ onChanged, row }: Pick<ManagementProps, "onChanged" | "row">) {
   const { client } = useAdminData();
   const [open, setOpen] = useState(false);
@@ -427,6 +460,7 @@ function ClaimActions({ onChanged, row }: Pick<ManagementProps, "onChanged" | "r
   const [error, setError] = useState<string | null>(null);
   const submitted = Boolean(row?.submitted);
   const adjudicated = Boolean(row?.adjudicated);
+  const documents = row?.philhealth ? <ClaimDocumentButtons claimId={value(row, "id")} /> : null;
   async function send() {
     setSaving(true);
     const result = await submitClaim(client, value(row, "id"));
@@ -444,9 +478,9 @@ function ClaimActions({ onChanged, row }: Pick<ManagementProps, "onChanged" | "r
     setOpen(false);
     onChanged();
   }
-  if (!submitted) return <div className="record-actions"><Button size="sm" disabled={saving} onClick={() => void send()}>{saving ? "Submitting…" : "Submit claim"}</Button>{error ? <span className="sr-only" role="alert">{error}</span> : null}</div>;
-  if (adjudicated) return null;
-  return <><Button size="sm" variant="outline" onClick={() => setOpen(true)}>Adjudicate</Button><Dialog open={open} onOpenChange={setOpen} title="Adjudicate claim" description="Record the payor decision and approved amount."><form className="dialog-body" onSubmit={adjudicate}><Field label="Decision"><Select name="result"><option value="approved">Approved</option><option value="partial">Partially approved</option><option value="denied">Denied</option></Select></Field><Field label="Approved amount"><Input name="amount" type="number" min="0" step="0.01" defaultValue={value(row, "amount")} /></Field><Field label="Reason"><Textarea name="reason" /></Field>{error ? <p className="form-error" role="alert">{error}</p> : null}<div className="dialog-actions"><Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit" disabled={saving}>{saving ? "Saving…" : "Record decision"}</Button></div></form></Dialog></>;
+  if (!submitted) return <div className="record-actions">{documents}<Button size="sm" disabled={saving} onClick={() => void send()}>{saving ? "Submitting…" : "Submit claim"}</Button>{error ? <span className="form-error" role="alert">{error}</span> : null}</div>;
+  if (adjudicated) return documents ? <div className="record-actions">{documents}</div> : null;
+  return <><div className="record-actions">{documents}<Button size="sm" variant="outline" onClick={() => setOpen(true)}>Adjudicate</Button></div><Dialog open={open} onOpenChange={setOpen} title="Adjudicate claim" description="Record the payor decision and approved amount."><form className="dialog-body" onSubmit={adjudicate}><Field label="Decision"><Select name="result"><option value="approved">Approved</option><option value="partial">Partially approved</option><option value="denied">Denied</option></Select></Field><Field label="Approved amount"><Input name="amount" type="number" min="0" step="0.01" defaultValue={value(row, "amount")} /></Field><Field label="Reason"><Textarea name="reason" /></Field>{error ? <p className="form-error" role="alert">{error}</p> : null}<div className="dialog-actions"><Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit" disabled={saving}>{saving ? "Saving…" : "Record decision"}</Button></div></form></Dialog></>;
 }
 
 function AppointmentActions({ onChanged, row }: Pick<ManagementProps, "onChanged" | "row">) {
@@ -461,6 +495,49 @@ function AppointmentActions({ onChanged, row }: Pick<ManagementProps, "onChanged
   }
   if (!['booked', 'arrived'].includes(status)) return null;
   return <div className="record-actions">{status === "booked" ? <Button size="sm" disabled={saving} onClick={() => void change("arrived")}>Check in</Button> : null}{status === "booked" ? <Button size="sm" variant="outline" disabled={saving} onClick={() => void change("noshow")}>No-show</Button> : null}<Button size="sm" variant="danger" disabled={saving} onClick={() => void change("cancelled")}>Cancel</Button></div>;
+}
+
+function PhilhealthCoverageAction({ row }: Pick<ManagementProps, "row">) {
+  const { client, isSuperadmin, organization, permissions } = useAdminData();
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+  if (!isSuperadmin && !permissions.includes("can_manage_billing") && !permissions.includes("can_manage_claims")) return null;
+  async function save(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!organization) return;
+    const form = new FormData(event.currentTarget);
+    setSaving(true);
+    setError(null);
+    const result = await savePatientPhilhealthCoverage(client, {
+      organizationId: organization.id,
+      patientId: value(row, "id"),
+      philhealthId: String(form.get("pin") ?? ""),
+      category: String(form.get("category")) as PhilhealthMemberCategory,
+      relationship: String(form.get("relationship")) as "self" | "spouse" | "child" | "parent",
+      eligibilityReference: String(form.get("reference") ?? "").trim() || null,
+    });
+    setSaving(false);
+    if (result.error) return setError(result.error.message);
+    setSaved(true);
+    setOpen(false);
+  }
+  return <>
+    <Button size="sm" variant="outline" onClick={() => { setSaved(false); setOpen(true); }}>{saved ? "PhilHealth saved" : "PhilHealth"}</Button>
+    <Dialog open={open} onOpenChange={setOpen} title="PhilHealth coverage" description="Record the patient's PIN and member category. Indigent, sponsored, kasambahay, senior and lifetime members qualify for No Balance Billing.">
+      <form className="dialog-body" onSubmit={save}>
+        <div className="form-grid">
+          <Field label="PhilHealth PIN (12 digits)"><Input name="pin" inputMode="numeric" placeholder="12-345678901-2" required /></Field>
+          <Field label="Member category"><Select name="category" defaultValue="employed"><option value="employed">Employed</option><option value="voluntary">Voluntary / self-earning</option><option value="indigent">Indigent</option><option value="sponsored">Sponsored</option><option value="kasambahay">Kasambahay</option><option value="senior">Senior citizen</option><option value="lifetime">Lifetime</option></Select></Field>
+          <Field label="Patient is the member's"><Select name="relationship" defaultValue="self"><option value="self">Member (self)</option><option value="spouse">Spouse</option><option value="child">Child</option><option value="parent">Parent</option></Select></Field>
+          <Field label="Eligibility reference (PBEF / tracking no.)"><Input name="reference" placeholder="Optional" /></Field>
+        </div>
+        {error ? <p className="form-error" role="alert">{error}</p> : null}
+        <div className="dialog-actions"><Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button><Button type="submit" disabled={saving}>{saving ? "Saving…" : "Save coverage"}</Button></div>
+      </form>
+    </Dialog>
+  </>;
 }
 
 function PatientStatusAction({ onChanged, row }: Pick<ManagementProps, "onChanged" | "row">) {
@@ -881,7 +958,7 @@ export function RecordRowActions({ dataset, onChanged, row }: ManagementProps) {
   }
   if (dataset === "services" || dataset === "templates" || dataset === "companies") return <div className="record-actions"><RecordEditorDialog dataset={dataset} label={dataset.slice(0, -1)} onChanged={onChanged} row={row} /></div>;
   if (dataset === "features") return <Button size="sm" variant="outline" onClick={async () => { if (!organization) return; await setOrganizationModule(client, organization.id, value(row, "key") as OrganizationModuleKey, !Boolean(row?.enabled)); onChanged(); }}><Power aria-hidden="true" size={14} />{row?.enabled ? "Disable" : "Enable"}</Button>;
-  if (dataset === "patients") return <PatientStatusAction onChanged={onChanged} row={row} />;
+  if (dataset === "patients") return <div className="record-actions"><PhilhealthCoverageAction row={row} /><PatientStatusAction onChanged={onChanged} row={row} /></div>;
   if (dataset === "appointments") return <AppointmentActions onChanged={onChanged} row={row} />;
   if (dataset === "billing" && Number(row?.balance ?? 0) > 0) return <PaymentDialog onChanged={onChanged} row={row} />;
   if (dataset === "claims") return <ClaimActions onChanged={onChanged} row={row} />;
