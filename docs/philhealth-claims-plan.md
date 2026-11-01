@@ -380,8 +380,8 @@ rough (S ≈ 2–4 days, M ≈ 1–2 weeks, L ≈ 2–4 weeks).
 | PHIC SOA + Itemized Charges, pre-filled CSF (print to PDF) | ✅ Built (slice 5.3, partial) |
 | Real PHIC amounts (fee schedule / case rates) | ❌ PHIC column = claimed charges |
 | CF1, CF2, CF4, lab-result attachments, Annex D | ❌ |
-| Structured names, address, dependents' member details, doctor PAN, facility accreditation format | ✅ Built (R1.1, branch `feat/philhealth-r1-data-foundations`) |
-| Discharge outcome, visit setting and room, referral, triage level and core presentation | ❌ R1.2 |
+| Structured names, address, dependents' member details, doctor PAN, facility accreditation format | ✅ Built (R1.1) |
+| Discharge outcome, visit setting and room, referral, triage level and core presentation | ✅ Built (R1.2, branch `feat/philhealth-r1-2-encounter-context`) |
 | Claim workbench: checklist, uploads, RTH, deadlines, remittance | ❌ |
 | eSOA / eClaims XML, eligibility check, transmission | ❌ |
 | Claims for patients who pay (standard billing + PhilHealth share) | ❌ |
@@ -426,11 +426,11 @@ forms disagree with each other or with the member record.
 | Member details for dependents | Member name, birth date, sex and PIN when the patient isn't the member | Front desk (PhilHealth dialog) | CSF, CF1 |
 | Doctor PhilHealth accreditation (PAN, `1234-1234567-1`) and PRC license | Stored in `practitioners.identifier`. **Doctors enter their own** on their Profile page (provider and admin apps), with no verification step. The page shows warnings (must match the certificate; a wrong PAN gets claims returned or PF paid to the wrong accreditation; the doctor is responsible; changes don't alter submitted claims) and asks for confirmation before saving. Admins can still correct it from Staff accounts. Every change is in the audit log | Doctor (self-service); admin for corrections | CSF Part IV, CF2, CF4 Part VII |
 | Facility accreditation format | Validate `H########` / ASC / MCP formats | Admin | All forms |
-| Encounter setting and accommodation | Screen for `encounter_setting` (OPD / ER / inpatient) and `accommodation_type` (ward / private), already in the database | Front desk at check-in | NBB/ZBB rule, CF2 |
+| Encounter setting and accommodation | Check-in dialog for `encounter_setting` (OPD / ER / inpatient) and `accommodation_type` (ward / private, inpatient only). Check-in now opens the encounter, so the ED entry time is the check-in time | Front desk at check-in | NBB/ZBB rule, CF2 |
 | Admission and discharge **time** | Already stored as timestamps; just shown on forms | — | CF2, CF4 |
-| Discharge outcome | New field on finishing a visit: improved, recovered, transferred, home against advice, absconded, expired | Doctor | CF2, CF4 Part VI |
-| Referral | Referred from / to another facility, and why | Doctor / front desk | CF2, CF4 Part III |
-| Emergency triage level and core presentation | ESI level 1–5 and the PC 2025-0020 core presentation list | Nurse at triage | FBE claims, CF4, Annex D |
+| Discharge outcome | Asked in the Complete encounter dialog: improved, recovered, transferred (with receiving facility), home against advice, absconded, expired. Can be corrected on the finished chart until the claim is submitted | Doctor | CF2, CF4 Part VI |
+| Referral | Referring facility and reason at check-in; receiving facility and reason when the doctor records a transfer | Front desk (from) / doctor (to) | CF2, CF4 Part III |
+| Emergency triage level and core presentation | Level 1–5 (resuscitation, emergent, urgent, less urgent, non-urgent) and the 27 PC 2025-0020 Annex A core presentations (`philhealth_core_presentations`) | Nurse at triage | FBE claims, CF4, Annex D |
 
 Acceptance:
 - The CSF prints split names, the member section for dependents, and the

@@ -119,12 +119,32 @@ Facility HCI accreditation no.: `H00000001`.
     slots.
     - ✅ Both confirm right away, with no payment step, because the facility
       waives charges.
-11. Click **Check in** on both appointments.
+11. Click **Check in** on Maria's appointment. A **Check in** dialog opens
+    (R1.2).
+    - Leave **Visit setting** as "Not specified" and click **Check in**.
+      - ✅ Error: "choose the visit setting for this PhilHealth patient".
+    - Choose **Inpatient (admitted)** without a room type.
+      - ✅ The **Room type** field appears and is required.
+    - Choose **Emergency (ER)**, enter **Referred from** `Synthetic Rural Health
+      Unit`, and check in.
+      - ✅ The appointment shows as checked in.
+11a. Check in Jose as **Outpatient (OPD)**.
+11b. **Negative check:** check in a patient **without** PhilHealth and leave
+     the setting blank.
+     - ✅ Check-in works as before, with no extra fields required.
 
 ### Part D: Triage (Nurse, provider app)
 12. Record vital signs and triage for both. For example, Maria has a
     temperature of 38.5 °C.
+    - For Maria (emergency), first save **without** an emergency triage
+      level.
+      - ✅ Error: "Record the triage level and core presentation for this
+        PhilHealth emergency visit."
+    - Set **Emergency triage level** to **3 · Urgent** and **Core
+      presentation** to **Fever / chills** (27 Annex A choices), then save.
+    - Jose (outpatient) needs neither.
     - ✅ Both move to the doctor's queue.
+    - ✅ Reopening Maria's triage shows the saved level and presentation.
 
 ### Part E: Maria's consultation, coded properly (Doctor)
 13. Start Maria's consultation from **My queue today**.
@@ -143,11 +163,18 @@ Facility HCI accreditation no.: `H00000001`.
     - End with **N39.0 as Final**.
 21. **Remove** R50.9.
     - ✅ It disappears.
-22. Click **Finish encounter**.
+22. Click **Finish encounter**. The confirmation dialog now has **Discharge
+    outcome**.
+    - Click **Complete encounter** with the outcome "Not recorded".
+      - ✅ Error: "record the discharge outcome for this PhilHealth visit".
+    - Choose **Transferred / referred**.
+      - ✅ **Transferred to (facility)** appears and is required.
+    - Choose **Improved** and complete the encounter.
 
 ### Part F: Jose's consultation, not coded (Doctor)
 23. Start Jose's consultation, write a short note, and click **Finish
-    encounter** **without** adding a diagnosis.
+    encounter** **without** adding a diagnosis. Choose **Recovered** as the
+    discharge outcome.
 
 ### Part G: Bills and claims (Admin)
 24. **Billing**: Maria's and Jose's invoices show **₱0 due / Paid**, while the
@@ -164,6 +191,8 @@ Facility HCI accreditation no.: `H00000001`.
      has an **Open chart** button. Open it, and in **Diagnosis (ICD-10)** pick
      **J06.9 – Acute upper respiratory infection**.
      - ✅ It shows as **Final**.
+     - ✅ A **Discharge** card shows **Recovered** and can be corrected until
+       the claim is submitted.
 26b. **(Admin)** Refresh **HMO Claims**.
      - ✅ Jose's Final diagnosis now shows **J06.9**.
      - ✅ **Submit claim** now succeeds.
