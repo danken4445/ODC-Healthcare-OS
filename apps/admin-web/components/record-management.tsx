@@ -51,6 +51,7 @@ import {
 } from "../lib/admin-data";
 import { useAdminData } from "./admin-data-context";
 import { buildClaimSignatureFormDocument, buildStatementOfAccountDocument } from "./philhealth-claim-documents";
+import { CheckInAction } from "./check-in-dialog";
 import { PhilhealthDetailsAction, PractitionerPanAction } from "./philhealth-details-dialog";
 import type { DataRow } from "./data-table";
 import { Button } from "./ui/button";
@@ -486,14 +487,14 @@ function AppointmentActions({ onChanged, row }: Pick<ManagementProps, "onChanged
   const { client, organization } = useAdminData();
   const [saving, setSaving] = useState(false);
   const status = value(row, "statusCode");
-  async function change(next: "arrived" | "cancelled" | "noshow") {
+  async function change(next: "cancelled" | "noshow") {
     setSaving(true);
     await updateAppointmentStatus(client, value(row, "id"), next, organization?.id);
     setSaving(false);
     onChanged();
   }
   if (!['booked', 'arrived'].includes(status)) return null;
-  return <div className="record-actions">{status === "booked" ? <Button size="sm" disabled={saving} onClick={() => void change("arrived")}>Check in</Button> : null}{status === "booked" ? <Button size="sm" variant="outline" disabled={saving} onClick={() => void change("noshow")}>No-show</Button> : null}<Button size="sm" variant="danger" disabled={saving} onClick={() => void change("cancelled")}>Cancel</Button></div>;
+  return <div className="record-actions">{status === "booked" ? <CheckInAction appointmentId={value(row, "id")} disabled={saving} onCheckedIn={onChanged} /> : null}{status === "booked" ? <Button size="sm" variant="outline" disabled={saving} onClick={() => void change("noshow")}>No-show</Button> : null}<Button size="sm" variant="danger" disabled={saving} onClick={() => void change("cancelled")}>Cancel</Button></div>;
 }
 
 function PatientStatusAction({ onChanged, row }: Pick<ManagementProps, "onChanged" | "row">) {

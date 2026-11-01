@@ -18,7 +18,7 @@ const sampleDocument: PhilhealthClaimDocument = {
   facility: { name: "Synthetic LGU Hospital <Main>", address: "Sample City", hci_accreditation_number: "H00000001", facility_type: "hospital_level_1", ownership: "lgu" },
   patient: { id: "p1", number: "WI-0001", name: "Maria Test Santos", family: "Santos", given: "Maria", middle: "Test", suffix: null, sex: "female", birth_date: "1976-07-11", address: "Sample Barangay" },
   member: { pin: "12-345678901-2", member_pin: "12-345678901-2", category: "sponsored", relationship: "self", eligibility_reference: "PBEF-TEST-0001", family: null, given: null, middle: null, suffix: null, birth_date: null, sex: null },
-  encounter: { id: "e1", transaction_number: "OPD-ABCDEF12", setting: null, admitted_at: "2026-10-31T03:10:25Z", discharged_at: "2026-10-31T08:00:00Z", attending_name: "Synthetic Doctor", attending_accreditation: null },
+  encounter: { id: "e1", transaction_number: "OPD-ABCDEF12", setting: null, admitted_at: "2026-10-31T03:10:25Z", discharged_at: "2026-10-31T08:00:00Z", attending_name: "Synthetic Doctor", attending_accreditation: null, accommodation_type: null, triage_level: null, core_presentation_code: null, core_presentation: null, discharge_outcome: "improved", referred_from_facility: null, referred_from_reason: null, referred_to_facility: null, referred_to_reason: null },
   diagnoses: [{ code: "N39.0", description: "Urinary tract infection, site not specified", rank: 1 }],
   claim: { id: "c1", state: "draft", payer_type: "philhealth", primary_icd10_code: "N39.0", claimed_amount_centavos: 132000, approved_amount_centavos: null, adjudication_result: null, submitted_at: null, philhealth_claim_number: null },
   lines: [
