@@ -1159,6 +1159,12 @@ export type Database = {
           hmo_provider_name: string | null
           id: string
           max_benefit_limit: number | null
+          member_birth_date: string | null
+          member_family_name: string | null
+          member_given_name: string | null
+          member_middle_name: string | null
+          member_sex: string | null
+          member_suffix: string | null
           organization_id: string
           patient_id: string
           payor: Json
@@ -1183,6 +1189,12 @@ export type Database = {
           hmo_provider_name?: string | null
           id?: string
           max_benefit_limit?: number | null
+          member_birth_date?: string | null
+          member_family_name?: string | null
+          member_given_name?: string | null
+          member_middle_name?: string | null
+          member_sex?: string | null
+          member_suffix?: string | null
           organization_id: string
           patient_id: string
           payor: Json
@@ -1207,6 +1219,12 @@ export type Database = {
           hmo_provider_name?: string | null
           id?: string
           max_benefit_limit?: number | null
+          member_birth_date?: string | null
+          member_family_name?: string | null
+          member_given_name?: string | null
+          member_middle_name?: string | null
+          member_sex?: string | null
+          member_suffix?: string | null
           organization_id?: string
           patient_id?: string
           payor?: Json
@@ -5577,6 +5595,14 @@ export type Database = {
           allocated_quantity: number
         }[]
       }
+      apply_practitioner_philhealth_accreditation: {
+        Args: {
+          p_practitioner_id: string
+          p_pan: string
+          p_prc_license: string
+        }
+        Returns: undefined
+      }
       archive_clinical_document_template: {
         Args: {
           p_organization_id: string
@@ -5884,6 +5910,12 @@ export type Database = {
           walk_in_id: string
           pin: string
         }[]
+      }
+      current_doctor_practitioner_id: {
+        Args: {
+          p_organization_id: string
+        }
+        Returns: string
       }
       delete_clinic_role_definition: {
         Args: {
@@ -6523,6 +6555,12 @@ export type Database = {
         }
         Returns: string[]
       }
+      get_my_philhealth_accreditation: {
+        Args: {
+          p_organization_id: string
+        }
+        Returns: Json
+      }
       get_my_teleconsult_workspace_preference: {
         Args: Record<PropertyKey, never>
         Returns: Json
@@ -6617,6 +6655,13 @@ export type Database = {
         }
         Returns: Json
       }
+      get_patient_philhealth_profile: {
+        Args: {
+          p_organization_id: string
+          p_patient_id: string
+        }
+        Returns: Json
+      }
       get_pharmacy_prescription_availability: {
         Args: {
           p_organization_id: string
@@ -6640,6 +6685,13 @@ export type Database = {
           organization_ids: string[]
           role_codes: string[]
         }[]
+      }
+      get_practitioner_philhealth_accreditation: {
+        Args: {
+          p_organization_id: string
+          p_user_id: string
+        }
+        Returns: Json
       }
       get_professional_fee_at: {
         Args: {
@@ -6737,6 +6789,17 @@ export type Database = {
           p_encounter_id: string
         }
         Returns: string
+      }
+      human_name_parts: {
+        Args: {
+          p_name: Json
+        }
+        Returns: {
+          family: string
+          given: string
+          middle: string
+          suffix: string
+        }[]
       }
       identify_patient_by_qr: {
         Args: {
@@ -7199,6 +7262,12 @@ export type Database = {
           results: Json
         }[]
       }
+      philhealth_staff_can_edit: {
+        Args: {
+          p_organization_id: string
+        }
+        Returns: boolean
+      }
       raise_encounter_version_conflict: {
         Args: {
           p_actual_version: number
@@ -7566,8 +7635,33 @@ export type Database = {
           p_category: string
           p_beneficiary_relationship?: string
           p_eligibility_reference?: string
+          p_member_pin?: string
+          p_member_family_name?: string
+          p_member_given_name?: string
+          p_member_middle_name?: string
+          p_member_suffix?: string
+          p_member_birth_date?: string
+          p_member_sex?: string
         }
         Returns: string
+      }
+      save_patient_philhealth_identity: {
+        Args: {
+          p_organization_id: string
+          p_patient_id: string
+          p_family_name: string
+          p_given_name: string
+          p_middle_name: string
+          p_suffix: string
+          p_sex: string
+          p_birth_date: string
+          p_street: string
+          p_barangay: string
+          p_city: string
+          p_province: string
+          p_postal_code?: string
+        }
+        Returns: undefined
       }
       save_provider_clinic_service: {
         Args: {
@@ -7667,6 +7761,14 @@ export type Database = {
         }
         Returns: number
       }
+      set_my_philhealth_accreditation: {
+        Args: {
+          p_organization_id: string
+          p_pan: string
+          p_prc_license?: string
+        }
+        Returns: Json
+      }
       set_my_professional_fee: {
         Args: {
           p_service_id: string
@@ -7724,6 +7826,15 @@ export type Database = {
         Args: {
           p_practitioner_role_id: string
           p_share_basis_points: number
+        }
+        Returns: undefined
+      }
+      set_practitioner_philhealth_accreditation: {
+        Args: {
+          p_organization_id: string
+          p_user_id: string
+          p_pan: string
+          p_prc_license?: string
         }
         Returns: undefined
       }

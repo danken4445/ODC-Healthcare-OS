@@ -1717,15 +1717,28 @@ export interface PhilhealthClaimDocument {
     id: string;
     number: string;
     name: string;
+    family: string | null;
+    given: string | null;
+    middle: string | null;
+    suffix: string | null;
     sex: string | null;
     birth_date: string | null;
     address: string | null;
   };
   member: {
+    /** The patient's own PIN (the dependent PIN when the patient isn't the member). */
     pin: string | null;
+    member_pin: string | null;
     category: string | null;
     relationship: string;
     eligibility_reference: string | null;
+    /** Member's details; only set when the patient is a dependent. */
+    family: string | null;
+    given: string | null;
+    middle: string | null;
+    suffix: string | null;
+    birth_date: string | null;
+    sex: string | null;
   };
   encounter: {
     id: string;
@@ -1752,6 +1765,54 @@ export interface PhilhealthClaimDocument {
   payments_centavos: number;
   prepared_by: string | null;
   generated_at: string;
+}
+
+export type PhilhealthRelationship = "self" | "spouse" | "child" | "parent";
+
+/** Legal name, sex, birth date and mailing address in the form PhilHealth claim forms print. */
+export interface PatientPhilhealthIdentity {
+  familyName: string;
+  givenName: string;
+  middleName: string | null;
+  suffix: string | null;
+  sex: "male" | "female";
+  birthDate: string;
+  street: string | null;
+  barangay: string;
+  city: string;
+  province: string;
+  postalCode: string | null;
+}
+
+/** The member a dependent patient is covered under. */
+export interface PhilhealthMemberDetails {
+  pin: string;
+  familyName: string;
+  givenName: string;
+  middleName: string | null;
+  suffix: string | null;
+  birthDate: string;
+  sex: "male" | "female";
+}
+
+export interface PatientPhilhealthProfile {
+  patientId: string;
+  displayName: string | null;
+  identity: Partial<PatientPhilhealthIdentity>;
+  coverage: {
+    id: string;
+    pin: string | null;
+    category: PhilhealthMemberCategory | null;
+    relationship: PhilhealthRelationship;
+    eligibilityReference: string | null;
+    member: Partial<PhilhealthMemberDetails> | null;
+  } | null;
+}
+
+export interface PractitionerPhilhealthAccreditation {
+  practitionerId: string;
+  pan: string | null;
+  prcLicense: string | null;
 }
 
 /** PhilHealth member categories; indigent, sponsored, kasambahay, senior and lifetime qualify for NBB. */

@@ -114,7 +114,12 @@ import {
   type FacilityType,
   type OrganizationBillingProfile,
   type PhilhealthClaimDocument,
+  type PatientPhilhealthIdentity,
+  type PatientPhilhealthProfile,
   type PhilhealthMemberCategory,
+  type PhilhealthMemberDetails,
+  type PhilhealthRelationship,
+  type PractitionerPhilhealthAccreditation,
   type PosCartItem,
   type PosCheckoutResult,
   type NbbPharmacyPosCatalogItem,
@@ -4978,10 +4983,13 @@ export async function savePatientPhilhealthCoverage(
     patientId: string;
     philhealthId: string;
     category: PhilhealthMemberCategory;
-    relationship?: "self" | "spouse" | "child" | "parent";
+    relationship?: PhilhealthRelationship;
     eligibilityReference?: string | null;
+    /** Required when the patient is a dependent (relationship other than "self"). */
+    member?: PhilhealthMemberDetails | null;
   },
 ): Promise<SupabaseResult<string>> {
+  const member = input.relationship && input.relationship !== "self" ? input.member : null;
   const { data, error } = await client.rpc("save_patient_philhealth_coverage", {
     p_organization_id: input.organizationId,
     p_patient_id: input.patientId,
@@ -4989,9 +4997,159 @@ export async function savePatientPhilhealthCoverage(
     p_category: input.category,
     p_beneficiary_relationship: input.relationship ?? "self",
     p_eligibility_reference: input.eligibilityReference ?? undefined,
+    p_member_pin: member?.pin ?? undefined,
+    p_member_family_name: member?.familyName ?? undefined,
+    p_member_given_name: member?.givenName ?? undefined,
+    p_member_middle_name: member?.middleName ?? undefined,
+    p_member_suffix: member?.suffix ?? undefined,
+    p_member_birth_date: member?.birthDate ?? undefined,
+    p_member_sex: member?.sex ?? undefined,
   });
   if (error) return failure(error);
   return success(data);
+}
+
+/** Current PhilHealth identity and coverage details of a patient, for billing staff. */
+export async function getPatientPhilhealthProfile(
+  client: SupabaseClient<Database>,
+  organizationId: string,
+  patientId: string,
+): Promise<SupabaseResult<PatientPhilhealthProfile>> {
+  const { data, error } = await client.rpc("get_patient_philhealth_profile", {
+    p_organization_id: organizationId,
+    p_patient_id: patientId,
+  });
+  if (error) return failure(error);
+  const row = data as Record<string, string | null> & { coverage: Record<string, string | null> | null };
+  const coverage = row.coverage;
+  return success({
+    patientId: row.patient_id as string,
+    displayName: row.display_name,
+    identity: {
+      familyName: row.family ?? undefined,
+      givenName: row.given ?? undefined,
+      middleName: row.middle,
+      suffix: row.suffix,
+      sex: (row.sex === "male" || row.sex === "female" ? row.sex : undefined),
+      birthDate: row.birth_date ?? undefined,
+      street: row.street,
+      barangay: row.barangay ?? undefined,
+      city: row.city ?? undefined,
+      province: row.province ?? undefined,
+      postalCode: row.postal_code,
+    },
+    coverage: coverage
+      ? {
+          id: coverage.id as string,
+          pin: coverage.pin,
+          category: coverage.category as PhilhealthMemberCategory | null,
+          relationship: (coverage.relationship ?? "self") as PhilhealthRelationship,
+          eligibilityReference: coverage.eligibility_reference,
+          member: coverage.member_family_name
+            ? {
+                pin: coverage.member_pin ?? undefined,
+                familyName: coverage.member_family_name,
+                givenName: coverage.member_given_name ?? undefined,
+                middleName: coverage.member_middle_name,
+                suffix: coverage.member_suffix,
+                birthDate: coverage.member_birth_date ?? undefined,
+                sex: coverage.member_sex === "male" || coverage.member_sex === "female" ? coverage.member_sex : undefined,
+              }
+            : null,
+        }
+      : null,
+  });
+}
+
+/** Saves the patient's structured legal name, sex, birth date and mailing address. */
+export async function savePatientPhilhealthIdentity(
+  client: SupabaseClient<Database>,
+  organizationId: string,
+  patientId: string,
+  identity: PatientPhilhealthIdentity,
+): Promise<SupabaseResult<undefined>> {
+  const { error } = await client.rpc("save_patient_philhealth_identity", {
+    p_organization_id: organizationId,
+    p_patient_id: patientId,
+    p_family_name: identity.familyName,
+    p_given_name: identity.givenName,
+    p_middle_name: identity.middleName ?? "",
+    p_suffix: identity.suffix ?? "",
+    p_sex: identity.sex,
+    p_birth_date: identity.birthDate,
+    p_street: identity.street ?? "",
+    p_barangay: identity.barangay,
+    p_city: identity.city,
+    p_province: identity.province,
+    p_postal_code: identity.postalCode ?? undefined,
+  });
+  if (error) return failure(error);
+  return success(undefined);
+}
+
+export async function getPractitionerPhilhealthAccreditation(
+  client: SupabaseClient<Database>,
+  organizationId: string,
+  userId: string,
+): Promise<SupabaseResult<PractitionerPhilhealthAccreditation | null>> {
+  const { data, error } = await client.rpc("get_practitioner_philhealth_accreditation", {
+    p_organization_id: organizationId,
+    p_user_id: userId,
+  });
+  if (error) return failure(error);
+  const row = data as { practitioner_id: string; pan: string | null; prc_license: string | null } | null;
+  return success(row ? { practitionerId: row.practitioner_id, pan: row.pan, prcLicense: row.prc_license } : null);
+}
+
+function toAccreditation(data: unknown): PractitionerPhilhealthAccreditation | null {
+  const row = data as { practitioner_id: string; pan: string | null; prc_license: string | null } | null;
+  return row ? { practitionerId: row.practitioner_id, pan: row.pan, prcLicense: row.prc_license } : null;
+}
+
+/** The signed-in doctor's own PAN and PRC license; null when the user isn't a doctor/specialist at this clinic. */
+export async function getMyPhilhealthAccreditation(
+  client: SupabaseClient<Database>,
+  organizationId: string,
+): Promise<SupabaseResult<PractitionerPhilhealthAccreditation | null>> {
+  const { data, error } = await client.rpc("get_my_philhealth_accreditation", {
+    p_organization_id: organizationId,
+  });
+  if (error) return failure(error);
+  return success(toAccreditation(data));
+}
+
+/** Doctors record their own PAN (no verification step); every change is audited. */
+export async function setMyPhilhealthAccreditation(
+  client: SupabaseClient<Database>,
+  organizationId: string,
+  pan: string,
+  prcLicense?: string | null,
+): Promise<SupabaseResult<PractitionerPhilhealthAccreditation | null>> {
+  const { data, error } = await client.rpc("set_my_philhealth_accreditation", {
+    p_organization_id: organizationId,
+    p_pan: pan,
+    p_prc_license: prcLicense ?? undefined,
+  });
+  if (error) return failure(error);
+  return success(toAccreditation(data));
+}
+
+/** Records a doctor's PhilHealth accreditation number (1234-1234567-1) and optional PRC license. */
+export async function setPractitionerPhilhealthAccreditation(
+  client: SupabaseClient<Database>,
+  organizationId: string,
+  userId: string,
+  pan: string,
+  prcLicense?: string | null,
+): Promise<SupabaseResult<undefined>> {
+  const { error } = await client.rpc("set_practitioner_philhealth_accreditation", {
+    p_organization_id: organizationId,
+    p_user_id: userId,
+    p_pan: pan,
+    p_prc_license: prcLicense ?? undefined,
+  });
+  if (error) return failure(error);
+  return success(undefined);
 }
 
 export async function listEncounterConditions(
