@@ -86,6 +86,8 @@ import {
   type BodyRegionDefinition,
 } from "@odyssey/ui";
 import Link from "next/link";
+import { DischargeFields, normalizeDischarge } from "./DischargeFields";
+import type { DischargeDetails } from "@odyssey/types";
 import { useParams } from "next/navigation";
 import {
   FormEvent,
@@ -101,6 +103,7 @@ import { EncounterSoapEditor } from "./EncounterSoapEditor";
 import { ClinicalDocumentationWorkspace } from "./ClinicalDocumentationWorkspace";
 import { ClinicalOrdersAndCharges } from "./ClinicalOrdersAndCharges";
 import { EncounterDiagnosisPanel } from "./EncounterDiagnosisPanel";
+import { EncounterDischargePanel } from "./EncounterDischargePanel";
 import { LongitudinalRecord } from "./LongitudinalRecord";
 import { ClinicalTemplatePicker, type TemplateApplication } from "./template-studio";
 import {
@@ -248,6 +251,7 @@ export function EncounterRecordingScreen() {
   const [diagnosisBusy, setDiagnosisBusy] = useState(false);
   const [activeAction, setActiveAction] = useState<EncounterAction>("prescription");
   const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
+  const [discharge, setDischarge] = useState<DischargeDetails>({ outcome: null });
   const completionDialogRef = useRef<HTMLDialogElement>(null);
   const [historyQuery, setHistoryQuery] = useState("");
   const [soapSaveConfirmation, setSoapSaveConfirmation] = useState<{
@@ -954,7 +958,7 @@ export function EncounterRecordingScreen() {
       return;
     }
     setBusy(true);
-    const result = await finishClinicalEncounter(createBrowserSupabaseClient(), encounterId, encounter?.version);
+    const result = await finishClinicalEncounter(createBrowserSupabaseClient(), encounterId, encounter?.version, normalizeDischarge(discharge));
     setBusy(false);
     if (result.error) {
       if (result.error.message === "ENCOUNTER_VERSION_CONFLICT" || result.error.details === "ENCOUNTER_VERSION_CONFLICT") {
@@ -1217,6 +1221,7 @@ export function EncounterRecordingScreen() {
           <p className="eyebrow">Close encounter</p>
           <h2>Complete this encounter?</h2>
           <p>The note is saved and this action shares the completed record with the patient. Orders and documents already added remain attached to this encounter.</p>
+          <DischargeFields value={discharge} onChange={setDischarge} />
           <div>
             <Button onClick={() => setCompletionDialogOpen(false)} type="button" variant="outline">Keep documenting</Button>
             <Button disabled={busy} onClick={() => void completeEncounter()} type="button">{busy ? "Completing…" : "Complete encounter"}</Button>
@@ -1350,6 +1355,8 @@ export function EncounterRecordingScreen() {
               canEdit={encounter.status === "in_progress" || encounter.status === "finished"}
               encounterId={encounterId}
             />
+
+            {encounter.status === "finished" ? <EncounterDischargePanel encounterId={encounterId} /> : null}
 
             {encounter.status === "in_progress" && (
               <ClinicalOrdersAndCharges
