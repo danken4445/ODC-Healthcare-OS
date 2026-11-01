@@ -380,7 +380,8 @@ rough (S ≈ 2–4 days, M ≈ 1–2 weeks, L ≈ 2–4 weeks).
 | PHIC SOA + Itemized Charges, pre-filled CSF (print to PDF) | ✅ Built (slice 5.3, partial) |
 | Real PHIC amounts (fee schedule / case rates) | ❌ PHIC column = claimed charges |
 | CF1, CF2, CF4, lab-result attachments, Annex D | ❌ |
-| Structured names, address, doctor PAN, discharge outcome | ❌ (data gaps) |
+| Structured names, address, dependents' member details, doctor PAN, facility accreditation format | ✅ Built (R1.1, branch `feat/philhealth-r1-data-foundations`) |
+| Discharge outcome, visit setting and room, referral, triage level and core presentation | ❌ R1.2 |
 | Claim workbench: checklist, uploads, RTH, deadlines, remittance | ❌ |
 | eSOA / eClaims XML, eligibility check, transmission | ❌ |
 | Claims for patients who pay (standard billing + PhilHealth share) | ❌ |
@@ -423,7 +424,7 @@ forms disagree with each other or with the member record.
 | Structured patient name | Store `family`, `given`, `middle`, `suffix` in the FHIR `name` (keep `text`); split fields on registration and profile forms | Front desk / patient | CSF, CF1, CF2, CF4 ("LAST, FIRST, MIDDLE") |
 | Structured address | `line`, `barangay`, `municipality`, `province`, `zip` in `address` (keys surveillance already reads) | Front desk / patient | CF1, SOA |
 | Member details for dependents | Member name, birth date, sex and PIN when the patient isn't the member | Front desk (PhilHealth dialog) | CSF, CF1 |
-| Doctor PhilHealth accreditation (PAN, `1234-1234567-1`) and PRC license | Stored in `practitioners.identifier`; edited on the staff screen; validated format | Admin | CSF Part IV, CF2, CF4 Part VII |
+| Doctor PhilHealth accreditation (PAN, `1234-1234567-1`) and PRC license | Stored in `practitioners.identifier`. **Doctors enter their own** on their Profile page (provider and admin apps), with no verification step. The page shows warnings (must match the certificate; a wrong PAN gets claims returned or PF paid to the wrong accreditation; the doctor is responsible; changes don't alter submitted claims) and asks for confirmation before saving. Admins can still correct it from Staff accounts. Every change is in the audit log | Doctor (self-service); admin for corrections | CSF Part IV, CF2, CF4 Part VII |
 | Facility accreditation format | Validate `H########` / ASC / MCP formats | Admin | All forms |
 | Encounter setting and accommodation | Screen for `encounter_setting` (OPD / ER / inpatient) and `accommodation_type` (ward / private), already in the database | Front desk at check-in | NBB/ZBB rule, CF2 |
 | Admission and discharge **time** | Already stored as timestamps; just shown on forms | — | CF2, CF4 |

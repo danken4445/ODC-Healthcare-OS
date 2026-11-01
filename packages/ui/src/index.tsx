@@ -41,6 +41,7 @@ export {
 export type { BodyRegionDefinition } from "./musculoskeletal-figure";
 export { MusculoskeletalRegionPanel } from "./musculoskeletal-region-panel";
 export { AccessState } from "./access-state";
+export { formatProfessionalPan, PhilhealthAccreditationCard } from "./philhealth-accreditation-card";
 export type { AccessStateProps, AccessStateVariant } from "./access-state";
 export {
   SaveConfirmedModal,

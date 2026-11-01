@@ -5,6 +5,7 @@ import {
   buildClaimSignatureFormDocument,
   buildStatementOfAccountDocument,
   formatAge,
+  formatPhilhealthName,
   formatSoaAmount,
   pinBoxes,
   summarizeClaimDocument,
@@ -15,8 +16,8 @@ const sampleDocument: PhilhealthClaimDocument = {
   soa_number: "SOA-20261101-ABC123",
   phic_basis: "claimed_charges",
   facility: { name: "Synthetic LGU Hospital <Main>", address: "Sample City", hci_accreditation_number: "H00000001", facility_type: "hospital_level_1", ownership: "lgu" },
-  patient: { id: "p1", number: "WI-0001", name: "Maria Test Santos", sex: "female", birth_date: "1976-07-11", address: "Sample Barangay" },
-  member: { pin: "12-345678901-2", category: "sponsored", relationship: "self", eligibility_reference: "PBEF-TEST-0001" },
+  patient: { id: "p1", number: "WI-0001", name: "Maria Test Santos", family: "Santos", given: "Maria", middle: "Test", suffix: null, sex: "female", birth_date: "1976-07-11", address: "Sample Barangay" },
+  member: { pin: "12-345678901-2", member_pin: "12-345678901-2", category: "sponsored", relationship: "self", eligibility_reference: "PBEF-TEST-0001", family: null, given: null, middle: null, suffix: null, birth_date: null, sex: null },
   encounter: { id: "e1", transaction_number: "OPD-ABCDEF12", setting: null, admitted_at: "2026-10-31T03:10:25Z", discharged_at: "2026-10-31T08:00:00Z", attending_name: "Synthetic Doctor", attending_accreditation: null },
   diagnoses: [{ code: "N39.0", description: "Urinary tract infection, site not specified", rank: 1 }],
   claim: { id: "c1", state: "draft", payer_type: "philhealth", primary_icd10_code: "N39.0", claimed_amount_centavos: 132000, approved_amount_centavos: null, adjudication_result: null, submitted_at: null, philhealth_claim_number: null },
@@ -70,8 +71,25 @@ test("claim signature form puts a member's PIN in Part I and the case rate code 
   assert.ok(html.includes('first case rate:</span><span class="fill">N39.0</span>'));
 });
 
-test("claim signature form puts a dependent's PIN in the dependent field", () => {
-  const html = buildClaimSignatureFormDocument({ ...sampleDocument, member: { ...sampleDocument.member, relationship: "child" } });
+test("claim signature form prints a dependent's member details and both PINs", () => {
+  const html = buildClaimSignatureFormDocument({
+    ...sampleDocument,
+    member: { ...sampleDocument.member, relationship: "child", member_pin: "98-765432109-8", family: "Santos", given: "Pedro", middle: null, suffix: "Sr.", birth_date: "1950-02-03", sex: "male" },
+  });
+  const memberRows = html.slice(html.indexOf("1. PhilHealth Identification Number"), html.indexOf("4. PIN of dependent"));
+  assert.ok(memberRows.includes('<span class="digit">9</span><span class="digit">8</span>'));
+  assert.ok(memberRows.includes(">Pedro<"));
+  assert.ok(memberRows.includes(">Sr.<"));
+  assert.ok(memberRows.includes('<span class="digit">0</span><span class="digit">2</span><span class="dash">-</span><span class="digit">0</span><span class="digit">3</span>'));
   const dependentRow = html.slice(html.indexOf("4. PIN of dependent"), html.indexOf("5. Name of patient"));
   assert.equal((dependentRow.match(/class="digit">[0-9]</g) ?? []).length, 12);
+});
+
+test("formats names LAST, FIRST SUFFIX, MIDDLE in capitals", () => {
+  assert.equal(formatPhilhealthName({ family: "Dela Cruz", given: "Juan", middle: "Sipag", suffix: "Jr." }, "x"), "DELA CRUZ, JUAN JR., SIPAG");
+  assert.equal(formatPhilhealthName({ family: null, given: null, middle: null, suffix: null }, "Juan Dela Cruz"), "JUAN DELA CRUZ");
+});
+
+test("statement of account prints the PhilHealth name order", () => {
+  assert.ok(buildStatementOfAccountDocument(sampleDocument).includes("SANTOS, MARIA, TEST"));
 });

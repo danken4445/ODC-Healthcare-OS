@@ -135,6 +135,10 @@ select is(
 select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000106', true);
 select set_config('request.jwt.claims', '{"role":"authenticated","sub":"00000000-0000-0000-0000-000000000106"}', true);
 set local role authenticated;
+-- R1 identity details the claim forms print (covered in philhealth_r1_identity_test.sql).
+select public.save_patient_philhealth_identity('10000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000001',
+  'Santos', 'Maria', 'Test', null, 'female', '1976-07-11', '12 Sample St', 'Poblacion', 'Sample City', 'Cebu', '6000');
+select public.set_practitioner_philhealth_accreditation('10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000101', '123412345671');
 select lives_ok(
   $$ select public.submit_claim((select id from public.claims where encounter_id = 'f5000000-0000-0000-0000-000000000501')) $$,
   'a claim with a PIN, diagnosis and charges is submitted'
