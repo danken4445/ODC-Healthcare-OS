@@ -69,16 +69,47 @@ Facility HCI accreditation no.: `H00000001`.
      Facility-wide subsidy shows the Government No-Billing banner.
    - Set the profile back to step 2's values and save.
 
-### Part B: Registration and PhilHealth coverage (Front desk)
+### Part B: Registration and PhilHealth details (Front desk / Admin)
 5. **Register walk-in**: create Maria and Jose.
-6. Go to **Outpatients**, find Maria, and click **PhilHealth**.
-7. **Negative check:** enter PIN `1234` and save.
-   - ✅ Error: "A PhilHealth Identification Number has 12 digits."
-8. Enter PIN `123456789012`, category **Sponsored**, relationship **Member
-   (self)**, reference `PBEF-TEST-0001`, and save.
-   - ✅ The button now reads "PhilHealth saved".
-9. Do the same for Jose: PIN `123456789020`, category **Indigent**, reference
-   `PBEF-TEST-0002`.
+6. Go to **Outpatients**, find Maria, and click **PhilHealth**. The
+   **PhilHealth details** dialog opens with three sections.
+7. **Negative check:** clear the last name, enter PIN `1234`, and save.
+   - ✅ Error listing what's missing (last name), and the PIN error once the
+     identity part passes.
+8. Fill in Maria's details:
+   - Patient: Last **Santos**, First **Maria**, Middle **Test**, Female,
+     born **1976-07-11**, Barangay **Poblacion**, City **Sample City**,
+     Province **Cebu**, ZIP **6000**.
+   - Coverage: PIN `123456789012`, category **Sponsored**, relationship
+     **Member (self)**, reference `PBEF-TEST-0001`.
+   - Save.
+     - ✅ The button now reads "PhilHealth saved".
+     - ✅ Reopening shows everything pre-filled.
+9. Do the same for Jose (Last **Reyes**, First **Jose**, Male, born
+   **1990-02-14**). This time set relationship to **Child**.
+   - ✅ A **Member** section appears.
+   - Fill in the member: PIN `123456789038`, Last **Reyes**, First **Pedro**,
+     born **1960-05-05**, Male.
+   - ✅ Saving without the member's details is refused with a message saying
+     what's needed.
+9a. **(Doctor, provider app)** Click **Profile** in the header.
+    - ✅ The **PhilHealth accreditation** card shows four warnings: match the
+      certificate exactly; a wrong PAN returns claims or misroutes
+      professional fees; you are responsible; changes don't alter submitted
+      claims.
+    - Enter `1234` and click **Review and save**.
+      - ✅ Error: needs 12 digits.
+    - Enter `123412345671`, PRC `0123456`, and click **Review and save**.
+      - ✅ A confirmation dialog repeats **1234-1234567-1** and the PRC number.
+      - Click **Go back and edit**: nothing is saved.
+      - Review again and click **Yes, it matches my certificate**.
+        - ✅ "Current PAN: 1234-1234567-1" shows.
+        - ✅ The CSF later shows it in Part IV.
+    - Sign in as the **Nurse** and open the same page.
+      - ✅ No PhilHealth card appears.
+9b. **(Admin) Staff accounts:** click **PhilHealth PAN** on the doctor's row.
+    - ✅ It shows the PAN the doctor entered, and the admin can correct it.
+    - Admin and doctor edits both appear in the audit trail.
 
 > Record the PhilHealth details **before** the visit. The ₱0 rule and the
 > claim are decided when the bill is created.
