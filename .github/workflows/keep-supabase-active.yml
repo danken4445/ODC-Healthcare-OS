@@ -1,0 +1,35 @@
+name: Keep Supabase Active
+
+on:
+  schedule:
+    # Runs every 3 days at 04:00 UTC (well within Supabase's 7-day inactivity pause limit)
+    - cron: "0 4 */3 * *"
+  workflow_dispatch: # Allows manual trigger from the GitHub Actions UI
+
+jobs:
+  ping-supabase:
+    name: Ping Supabase Database
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Ping Supabase Database
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL || secrets.NEXT_PUBLIC_SUPABASE_URL || 'https://pjpkutapkwpvvmholjyq.supabase.co' }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_HU3SMxXb_PcBOic5Ck7vjA_tCI_DLkP' }}
+        run: pnpm run supabase:keep-active
